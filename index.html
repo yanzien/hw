@@ -1212,7 +1212,7 @@ async function doShare(perm){
         headers:{"content-type":"application/json","x-sync-key": siteConfig.syncKey||""},
         body: JSON.stringify({ type:"full", account: account })
       });
-      if(r.ok){ copyShareLink(location.origin+location.pathname+"#share="+id, "完全分享链接"); return; }
+      if(r.ok){ copyShareLink(location.origin+location.pathname+"?share="+id, "完全分享链接"); return; }
     }catch(e){}
     toast("完全分享链接生成失败（云端不可用）");
     return;
@@ -1226,17 +1226,23 @@ async function doShare(perm){
         headers:{"content-type":"application/json","x-sync-key": siteConfig.syncKey||""},
         body: JSON.stringify({ data: st })
       });
-      if(r.ok){ copyShareLink(location.origin+location.pathname+"#share="+id, "只读分享链接"); return; }
+      if(r.ok){ copyShareLink(location.origin+location.pathname+"?share="+id, "只读分享链接"); return; }
     }catch(e){}
     toast("云端分享失败，改用本地长链接");
   }
   const b64=btoa(unescape(encodeURIComponent(JSON.stringify(st))));
-  copyShareLink(location.origin+location.pathname+"#share="+b64, "只读分享链接");
+  copyShareLink(location.origin+location.pathname+"?share="+b64, "只读分享链接");
 }
 async function loadShare(){
-  const h=location.hash;
-  if(h.indexOf("#share=")!==0) return null;
-  const v=h.slice(7);
+  // 优先读查询参数 ?share= （App 转发/套壳时比 #片段 稳定，不易被丢弃）
+  const params=new URLSearchParams(location.search);
+  let v=params.get("share");
+  if(!v){
+    // 兼容旧的 #share= 片段链接
+    const h=location.hash;
+    if(h.indexOf("#share=")===0) v=h.slice(7);
+  }
+  if(!v) return null;
   if(v.startsWith("S1_")){
     const id=v.slice(3);
     if(siteConfig.syncEndpoint){
@@ -1269,12 +1275,12 @@ function showReadOnlyBanner(){
   document.body.classList.add("readonly");
   const b=document.getElementById("roBanner");
   b.innerHTML='🔗 只读分享模式 · 你正在查看他人进度（无法修改） · <a id="roExit">退出查看</a>';
-  document.getElementById("roExit").onclick=()=>{ location.hash=""; location.reload(); };
+  document.getElementById("roExit").onclick=()=>{ history.replaceState(null,"",location.pathname); location.reload(); };
 }
 function showFullShareBanner(){
   const b=document.getElementById("roBanner");
   b.innerHTML='🔓 完全分享模式 · 你已以账号 <b>'+account+'</b> 的身份登录（可修改，改动会同步到对方云端） · <a id="roExit">退出</a>';
-  document.getElementById("roExit").onclick=()=>{ location.hash=""; location.reload(); };
+  document.getElementById("roExit").onclick=()=>{ history.replaceState(null,"",location.pathname); location.reload(); };
 }
 
 /* ---------- admin ---------- */
