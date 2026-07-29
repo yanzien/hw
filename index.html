@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>暑假作业清单 · 任务管理</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --ink:#1f2733; --sub:#6b7686;
+    --line:#e6eaf2; --primary:#4f6ef7; --primary-d:#3b56d6;
+    --green:#16a34a; --green-bg:#e9f8ef; --amber:#d97706; --amber-bg:#fff5e6;
+    --red:#dc2626; --red-bg:#fdeaea; --chip:#eef1fb; --modal:#ffffff;
+    --shadow:0 2px 10px rgba(31,39,51,.06); --radius:14px;
+  }
+  [data-theme="dark"]{
+    --bg:#0c1020; --card:#161c2e; --ink:#e8ecf6; --sub:#9ba3b8;
+    --line:#2a3350; --primary:#6d8cff; --primary-d:#4f6ef7;
+    --green:#2ecc71; --green-bg:#132a20; --amber:#f0ad4e; --amber-bg:#382a14;
+    --red:#ff6b6b; --red-bg:#3d1b1b; --chip:#232b45; --modal:#1b2238;
+    --shadow:0 2px 14px rgba(0,0,0,.28);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;font-size:14px;line-height:1.5}
+  header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  [data-theme="dark"] header{background:rgba(22,28,46,.92)}
+  .brand{font-weight:700;font-size:16px;margin-right:4px;white-space:nowrap}
+  .brand span{color:var(--primary)}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;flex:1;min-width:160px;overflow-x:auto}
+  .tab{padding:5px 11px;border:1px solid var(--line);background:var(--card);border-radius:20px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .tab .x{opacity:.7;font-size:12px}
+  .btns{display:flex;gap:6px;flex-wrap:wrap}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:8px;font-size:13px;padding:7px 11px;background:var(--chip);color:var(--ink);transition:.15s}
+  button:hover{filter:brightness(.96)}
+  button.primary{background:var(--primary);color:#fff}
+  button.primary:hover{background:var(--primary-d)}
+  button.ghost{background:var(--card);border:1px solid var(--line)}
+  button.danger{background:var(--red-bg);color:var(--red)}
+  button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .btns button:disabled{opacity:.4;cursor:not-allowed;filter:none}
+  .wrap{max-width:1080px;margin:14px auto;padding:0 12px 60px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
+  .card-h{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .card-h h2{margin:0;font-size:15px}
+  .card-h .meta{color:var(--sub);font-size:12px}
+  .card-b{padding:12px 14px}
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:12px;color:var(--sub)}
+  .field input,.field textarea,.field select{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:13px;background:var(--card);color:var(--ink)}
+  .field textarea{resize:vertical;min-height:38px}
+  .row-actions{display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap}
+  .count-note{font-size:12px;color:var(--sub)}
+  .group{margin-bottom:12px}
+  .group-title{font-weight:700;font-size:14px;margin:6px 0 8px;display:flex;align-items:center;gap:8px}
+  .group-title .badge{background:var(--chip);color:var(--primary-d);font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600}
+  .sub-group{margin:4px 0 10px 0}
+  .sub-title{font-size:12px;color:var(--sub);margin:6px 0 4px;font-weight:600}
+  .item{display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;background:var(--card)}
+  .item:hover{border-color:#cdd6ea}
+  [data-theme="dark"] .item:hover{border-color:#3a466b}
+  .item .sel{width:16px;height:16px;margin-top:3px;accent-color:var(--primary);cursor:pointer;flex:none;display:none}
+  .batch-mode .item .sel{display:block}
+  .item .cb{width:18px;height:18px;margin-top:2px;accent-color:var(--green);cursor:pointer;flex:none}
+  .item .body{flex:1;min-width:0}
+  .item .ct{font-weight:600}
+  .item .nt{font-size:12px;color:var(--sub);margin-top:2px;word-break:break-word}
+  .item .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}
+  .tag{font-size:11px;padding:1px 7px;border-radius:8px;background:var(--chip);color:var(--sub)}
+  .tag.dead{background:var(--amber-bg);color:var(--amber)}
+  .tag.day{background:#e7e0fb;color:#6d28d9}
+  [data-theme="dark"] .tag.day{background:#2d2450;color:#b9a8ff}
+  .tag.warn{background:var(--red-bg);color:var(--red)}
+  .tag.safe{background:var(--green-bg);color:var(--green)}
+  .item .ops{display:flex;flex-direction:column;gap:5px;flex:none}
+  .item .ops button{padding:4px 9px;font-size:12px}
+  .item.done{opacity:.62;background:#fafbfc}
+  [data-theme="dark"] .item.done{background:#111627}
+  .item.done .ct{text-decoration:line-through}
+  .empty{color:var(--sub);font-size:13px;padding:10px 4px;text-align:center}
+  .day-col{background:#fbfcfe;border:1px dashed var(--line);border-radius:10px;padding:10px;margin-bottom:10px}
+  [data-theme="dark"] .day-col{background:#111627}
+  .day-col h3{margin:0 0 8px;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+  .day-col .prog{font-size:12px;color:var(--sub)}
+  .progress-wrap{margin-bottom:8px}
+  .progress-bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden;margin:8px 0}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),#36d6b8);border-radius:5px;transition:width .4s}
+  .stat-row{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--sub)}
+  .sub-progress{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12px}
+  .sub-progress .bar{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+  .sub-progress .fill{height:100%;background:var(--primary);border-radius:3px}
+  .batch-bar{display:none;background:var(--chip);border:1px dashed var(--primary);border-radius:10px;padding:10px;margin-bottom:12px;flex-wrap:wrap;gap:8px;align-items:center}
+  .batch-mode .batch-bar{display:flex}
+  .batch-bar .info{font-weight:600;margin-right:4px}
+  .ctx-menu{position:fixed;background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);z-index:100;display:none;overflow:hidden}
+  .ctx-item{padding:8px 14px;font-size:13px;cursor:pointer;white-space:nowrap}
+  .ctx-item:hover{background:var(--chip)}
+  .ctx-item.red{color:var(--red)}
+  footer{margin-top:10px;text-align:center;color:var(--sub);font-size:13px;padding:18px 16px}
+  footer button{background:none;border:none;color:var(--primary-d);text-decoration:underline;cursor:pointer;padding:6px 12px;font-size:17px;font-weight:600}
+  footer button:hover{color:var(--primary)}
+  footer .motivate{margin:12px auto 0;max-width:680px;color:var(--primary-d);font-size:15px;font-weight:600;line-height:1.7}
+  footer .sign{margin-top:12px;color:var(--sub);font-size:13px}
+  footer .sign a{color:var(--primary);text-decoration:underline;cursor:pointer}
+  .modal-mask{position:fixed;inset:0;background:rgba(20,28,40,.5);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+  .modal-mask.show{display:flex}
+  .modal{background:var(--modal);border:1px solid var(--line);border-radius:var(--radius);width:min(680px,100%);max-height:90vh;overflow:auto;padding:18px;box-shadow:var(--shadow)}
+  .modal h3{margin:0 0 14px}
+  .modal .field{margin-bottom:10px}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .close{float:right;font-size:20px;line-height:1;cursor:pointer;color:var(--sub)}
+  .sec-tabs{display:flex;gap:6px;margin-bottom:4px;flex-wrap:wrap}
+  .sec-tabs button{padding:6px 12px;border-radius:8px}
+  .sec-tabs button.on{background:var(--primary);color:#fff}
+  .hint{font-size:12px;color:var(--sub);margin:2px 0 10px}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1f2733;color:#fff;padding:9px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;z-index:99;pointer-events:none;max-width:90vw;text-align:center}
+  .toast.show{opacity:1}
+  [data-theme="dark"] .toast{background:#e8ecf6;color:#161c2e}
+  details summary{cursor:pointer;color:var(--primary-d);font-size:13px;font-weight:600;list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"▸ "}
+  details[open] summary::before{content:"▾ "}
+  .big-list{margin:0;padding:0;list-style:none}
+  .big-list li{padding:10px 0;border-bottom:1px solid var(--line)}
+  .big-list li:last-child{border-bottom:none}
+  .version-card{background:var(--chip);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+  .version-card h4{margin:0 0 4px;font-size:15px;color:var(--primary-d)}
+  [data-theme="dark"] .version-card h4{color:var(--primary)}
+  .version-card .date{font-size:12px;color:var(--sub);margin-bottom:6px}
+  .version-card p{margin:0;font-size:13px;line-height:1.6}
+  .about-links{list-style:none;margin:10px 0 0;padding:0}
+  .about-links li{margin:10px 0;font-size:15px}
+  .about-links a{color:var(--primary);text-decoration:underline}
+  .contact{color:var(--primary);font-weight:700}
+  .deadline-section{margin:8px 0 12px}
+  .deadline-section h4{margin:6px 0;font-size:13px;color:var(--sub);font-weight:600}
+  /* read-only */
+  body.readonly .item .ops{display:none}
+  body.readonly #addCard,body.readonly #batchBar,body.readonly #autoAssignBtn,body.readonly #resetBtn,body.readonly #adminBtn,body.readonly #newProj,body.readonly #batchToggle{display:none!important}
+  .ro-banner{background:var(--green-bg);color:var(--green);text-align:center;padding:8px;font-size:13px;font-weight:600}
+  .ro-banner a{color:var(--primary);cursor:pointer;text-decoration:underline}
+  /* calendar */
+  .cal-wrap{display:flex;gap:14px;flex-wrap:wrap}
+  .cal-list{flex:1;min-width:240px;max-height:60vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--card)}
+  .cal-list .proj-h{font-weight:700;margin:8px 0 4px;cursor:pointer;color:var(--primary-d)}
+  .cal-list .cat-h{font-weight:600;font-size:13px;margin:6px 0 3px;cursor:pointer;color:var(--primary)}
+  .cal-list .li{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:7px;cursor:pointer;font-size:13px}
+  .cal-list .li:hover{background:var(--chip)}
+  .cal-list .li.sel{background:var(--primary);color:#fff}
+  .cal-list .li .d{margin-left:auto;font-size:11px;color:var(--sub)}
+  .cal-list .li.sel .d{color:#e8ecf6}
+  .cal-grid{flex:2;min-width:300px}
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .cal-grid table{width:100%;border-collapse:collapse}
+  .cal-grid th,.cal-grid td{border:1px solid var(--line);height:62px;vertical-align:top;padding:3px;width:14.28%}
+  .cal-grid th{height:auto;font-size:12px;color:var(--sub);text-align:center;padding:4px}
+  .cal-grid td{padding:3px}
+  .cal-grid td.today{background:var(--green-bg)}
+  .cal-grid td .dnum{font-size:12px;color:var(--sub)}
+  .cal-grid td.has{background:var(--chip);cursor:pointer}
+  .cal-grid td.has:hover{outline:2px solid var(--primary)}
+  .cal-grid .cnt{font-size:11px;font-weight:700;color:var(--primary-d)}
+  .cal-grid .mini{font-size:10px;color:var(--sub);line-height:1.2;overflow:hidden;max-height:34px}
+  .cal-grid td.cancel-sel{outline:2px dashed var(--red);background:var(--red-bg)}
+  .cal-cancel-banner{background:var(--red-bg);color:var(--red);border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;cursor:pointer}
+  .cal-cancel-banner button{font-size:12px;padding:4px 10px}
+  .cal-cancel-banner .grow{flex:1}
+  /* admin */
+  .admin-tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+  .admin-tabs button{padding:5px 10px;border-radius:8px;font-size:12px}
+  .admin-tabs button.on{background:var(--primary);color:#fff}
+  .admin-section{display:none}
+  .admin-section.on{display:block}
+  .md-preview{border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:6px;font-size:13px;max-height:200px;overflow:auto}
+  .md-preview h1,.md-preview h2,.md-preview h3,.md-preview h4{margin:.4em 0}
+  .md-preview code{background:var(--chip);padding:1px 4px;border-radius:4px}
+  .md-preview ul{margin:.3em 0;padding-left:1.2em}
+  /* markdown generic */
+  .md h1,.md h2,.md h3,.md h4{margin:.4em 0;line-height:1.3}
+  .md code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:.92em}
+  .md ul{margin:.3em 0;padding-left:1.3em}
+  .md a{color:var(--primary)}
+  .md p{margin:.4em 0}
+  /* login */
+  .login-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .acc-tag{font-size:12px;background:var(--chip);padding:4px 10px;border-radius:14px;color:var(--primary-d);font-weight:600}
+  /* mobile */
+  @media (max-width:640px){
+    header{gap:5px;padding:6px 10px}
+    .brand{font-size:14px;width:100%}
+    .tabs{order:3;width:100%}
+    .btns{order:2;width:100%;justify-content:flex-start}
+    .form-grid{grid-template-columns:1fr 1fr}
+    button{padding:9px 12px;font-size:14px}
+    .cal-wrap{flex-direction:column}
+    .cal-list{max-height:none}
+    .cal-grid td{height:48px}
+    .modal{width:100%;padding:14px}
+    footer button{font-size:19px;padding:8px 14px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">📚 作业<span>清单</span></div>
+  <div class="tabs" id="tabs"></div>
+  <div class="btns">
+    <button class="ghost" id="undoBtn" title="撤销 (Ctrl+Z)">↶</button>
+    <button class="ghost" id="redoBtn" title="重做 (Ctrl+Y)">↷</button>
+    <button class="ghost" id="themeBtn" title="切换深浅色">🌙</button>
+    <button class="ghost" id="introBtn" title="介绍">📢</button>
+    <button class="ghost" id="adminBtn" title="小后台">🔧</button>
+    <button class="ghost" id="loginBtn">登录</button>
+    <button class="ghost" id="batchToggle">批量</button>
+    <button class="ghost" id="calBtn">📅 日历</button>
+    <button class="ghost" id="newProj">＋项目</button>
+    <button class="ghost" id="resetBtn" title="将默认清单恢复初始内容">重置</button>
+    <button class="ghost" id="shareBtn" title="生成只读分享链接">分享</button>
+    <button class="ghost" id="importBtn">导入</button>
+    <button class="ghost" id="exportBtn">导出</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none">
+  </div>
+</header>
+
+<div id="roBanner"></div>
+
+<div class="wrap">
+  <!-- progress overview -->
+  <div class="card">
+    <div class="card-h"><h2>📊 总进度</h2><span class="meta" id="progressMeta"></span></div>
+    <div class="card-b">
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="totalBar" style="width:0%"></div></div>
+        <div class="stat-row" id="statRow"></div>
+      </div>
+      <details><summary>按科目查看进度</summary><div id="subProgress"></div></details>
+    </div>
+  </div>
+
+  <div class="card" id="addCard">
+    <div class="card-h">
+      <h2>➕ 添加作业</h2>
+      <span class="meta">可一次性生成「共有 N 项」相同任务；未填日期默认 2026/8/31</span>
+    </div>
+    <div class="card-b">
+      <div class="form-grid">
+        <div class="field"><label>科目</label><input id="f_subject" placeholder="如：数学 / 自定义"></div>
+        <div class="field"><label>类别 / 模块</label><input id="f_category" placeholder="如：试卷"></div>
+        <div class="field"><label>作业内容</label><input id="f_content" placeholder="如：背诵单词"></div>
+        <div class="field"><label>要求 / 备注</label><input id="f_note" placeholder="选填"></div>
+        <div class="field"><label>截止日期</label><input id="f_deadline" type="date"></div>
+        <div class="field"><label>共有几项</label><input id="f_count" type="number" min="1" value="1"></div>
+      </div>
+      <div class="row-actions">
+        <button class="primary" id="addBtn">添加到本项目</button>
+        <span class="count-note" id="countNote"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="mainCard">
+    <div class="card-h">
+      <h2 id="curTitle">待完成</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="ghost" id="sortDeadline" title="按截止日期排序">按截止日期排序</button>
+        <button class="ghost" id="autoAssignBtn" title="自动平均分配到每天">自动分配</button>
+        <div class="sec-tabs">
+          <button class="on" data-sec="pending" id="secPending">待完成</button>
+          <button data-sec="done" id="secDone">已完成</button>
+          <button data-sec="day" id="secDay">每日任务</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-b">
+      <div class="batch-bar" id="batchBar">
+        <span class="info" id="batchInfo">已选 0 项</span>
+        <button class="ghost" id="batchAll">全选</button>
+        <button class="ghost" id="batchNone">取消</button>
+        <button class="ghost" id="batchDeadline">截止日期</button>
+        <button class="ghost" id="batchDay">调配</button>
+        <button class="ghost" id="batchComplex">复杂度</button>
+        <button class="ghost" id="batchDone">完成</button>
+        <button class="ghost" id="batchUndo">未完成</button>
+        <button class="danger" id="batchDel">删除</button>
+      </div>
+      <div id="viewPending"></div>
+      <div id="viewDone" style="display:none"></div>
+      <div id="viewDay" style="display:none"></div>
+      <!-- calendar mode -->
+      <div id="viewCal" style="display:none">
+        <div class="cal-wrap">
+          <div class="cal-list" id="calList"></div>
+          <div class="cal-grid">
+            <div class="cal-nav">
+              <button class="ghost" id="calPrev">◀ 上月</button>
+              <strong id="calTitle"></strong>
+              <button class="ghost" id="calNext">下月 ▶</button>
+            </div>
+            <table id="calTable"></table>
+            <p class="hint">点左侧任务→点某天即可调度；点类别名/项目名（或按住 Ctrl 多选）→点某天按「一天放几个」顺延分配。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <button id="usageBtn">📖 使用说明</button>
+    <span>·</span>
+    <button id="changelogBtn">📝 更新日志</button>
+    <div class="motivate">暑假不是用来虚度的 —— 每天完成一点点，开学时你会感谢现在没有躺平的自己 💪</div>
+    <div class="sign">Made by <a id="aboutBtn">yanzien</a></div>
+  </footer>
+</div>
+
+<!-- context menu -->
+<div class="ctx-menu" id="ctxMenu">
+  <div class="ctx-item" id="ctxRename">✏️ 重命名</div>
+  <div class="ctx-item" id="ctxCopy">📋 复制项目</div>
+  <div class="ctx-item red" id="ctxDelete">🗑 删除项目</div>
+</div>
+
+<!-- edit modal -->
+<div class="modal-mask" id="modalMask">
+  <div class="modal">
+    <h3>编辑作业明细</h3>
+    <div class="field"><label>科目</label><input id="e_subject"></div>
+    <div class="field"><label>类别 / 模块</label><input id="e_category"></div>
+    <div class="field"><label>作业内容</label><input id="e_content"></div>
+    <div class="field"><label>要求 / 备注</label><textarea id="e_note"></textarea></div>
+    <div class="field"><label>截止日期</label><input id="e_deadline" type="date"></div>
+    <div class="field"><label>安排到日期（调配，留空不安排）</label><input id="e_day" type="date"></div>
+    <div class="field"><label>任务复杂度（1-100，越大越难，默认 50）</label><input id="e_complex" type="number" min="1" max="100" value="50"></div>
+    <div class="field"><label style="flex-direction:row;align-items:center;gap:6px;color:var(--ink)"><input type="checkbox" id="e_noauto" style="width:auto"> 不参与自动调配</label></div>
+    <div class="modal-actions">
+      <button class="ghost" id="eCancel">取消</button>
+      <button class="primary" id="eSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- batch modal -->
+<div class="modal-mask" id="batchModalMask">
+  <div class="modal">
+    <h3 id="batchTitle">批量修改</h3>
+    <div class="field" id="batchDeadlineField"><label>截止日期</label><input id="batch_deadline" type="date"></div>
+    <div class="field" id="batchDayField"><label>调配到日期</label><input id="batch_day" type="date"></div>
+    <div class="field" id="batchComplexField" style="display:none"><label>任务复杂度（1-100）</label><input id="batch_complex" type="number" min="1" max="100" value="50"></div>
+    <div class="modal-actions">
+      <button class="ghost" id="batchCancel">取消</button>
+      <button class="primary" id="batchSave">应用</button>
+    </div>
+  </div>
+</div>
+
+<!-- auto assign modal -->
+<div class="modal-mask" id="autoModalMask">
+  <div class="modal">
+    <h3>自动分配到每天</h3>
+    <p class="hint">把当前项目未完成的待办任务平均分配到所选日期范围内（每日总复杂度尽量相同）。</p>
+    <div class="field">
+      <label>分配模式</label>
+      <select id="auto_mode">
+        <option value="default">默认（优先级科目 → 截止日期，复杂度均衡）</option>
+        <option value="low">复杂度低优先（简单任务尽量靠前，仍保持均衡）</option>
+        <option value="high">复杂度高优先（困难任务尽量靠前，仍保持均衡）</option>
+      </select>
+    </div>
+    <div class="field"><label>开始日期</label><input id="auto_start" type="date"></div>
+    <div class="field"><label>结束日期</label><input id="auto_end" type="date"></div>
+    <div class="field">
+      <label>分配范围</label>
+      <select id="auto_scope">
+        <option value="empty">仅分配尚未安排日期的任务</option>
+        <option value="all">全部分配（覆盖已有日期）</option>
+      </select>
+    </div>
+    <div class="field"><label>优先级科目（可选，逗号分隔，靠前的优先安排，如：数学,科学）</label><input id="auto_priority" placeholder="如：数学,科学"></div>
+    <div class="field"><label style="flex-direction:row;align-items:center;gap:6px;color:var(--ink)"><input type="checkbox" id="auto_exclude" checked style="width:auto"> 排除标记为「不自动调配」的任务（推荐）</label></div>
+    <div class="modal-actions">
+      <button class="ghost" id="autoCancel">取消</button>
+      <button class="primary" id="autoRun">开始分配</button>
+    </div>
+  </div>
+</div>
+
+<!-- admin modal -->
+<div class="modal-mask" id="adminMask">
+  <div class="modal">
+    <span class="close" data-close="adminMask">×</span>
+    <h3>🔧 小后台（管理员）</h3>
+    <div class="field"><label>后台密码</label><input id="admin_pw" type="password" placeholder="默认 admin123"></div>
+    <div class="admin-tabs">
+      <button class="on" data-at="ann">公告</button>
+      <button data-at="intro">介绍</button>
+      <button data-at="about">关于作者</button>
+      <button data-at="log">更新日志</button>
+      <button data-at="data">默认数据</button>
+      <button data-at="cal">日历帮助</button>
+    </div>
+    <div class="admin-section on" id="at_ann">
+      <p class="hint">打开网页自动弹出的公告，留空则不弹。支持 Markdown。</p>
+      <textarea id="ad_announcement" rows="6"></textarea>
+      <div class="md-preview" id="pv_ann"></div>
+    </div>
+    <div class="admin-section" id="at_intro">
+      <p class="hint">「📢 介绍」按钮弹出的内容。支持 Markdown。</p>
+      <textarea id="ad_intro" rows="6"></textarea>
+      <div class="md-preview" id="pv_intro"></div>
+    </div>
+    <div class="admin-section" id="at_about">
+      <p class="hint">点击底部 yanzien 弹出的内容。支持 Markdown。</p>
+      <textarea id="ad_about" rows="6"></textarea>
+      <div class="md-preview" id="pv_about"></div>
+    </div>
+    <div class="admin-section" id="at_log">
+      <p class="hint">更新日志，支持 Markdown。</p>
+      <textarea id="ad_changelog" rows="8"></textarea>
+      <div class="md-preview" id="pv_log"></div>
+    </div>
+    <div class="admin-section" id="at_data">
+      <p class="hint">默认作业清单（JSON 数组，含 projects）。修改后新用户/重置将使用此数据。需为合法 JSON。</p>
+      <textarea id="ad_defaultData" rows="8" style="font-family:monospace;font-size:12px"></textarea>
+      <div class="hint" id="dataErr" style="color:var(--red)"></div>
+    </div>
+    <div class="admin-section" id="at_cal">
+      <p class="hint">进入日历模式时弹出的说明，支持 Markdown。</p>
+      <textarea id="ad_calendarHelp" rows="6"></textarea>
+      <div class="md-preview" id="pv_cal"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" id="adminExport">导出 site-config.json</button>
+      <button class="primary" id="adminSave">保存</button>
+    </div>
+    <p class="hint">保存会写入浏览器本地并覆盖后台内容；要正式发布到 GitHub Pages，请点「导出」把 site-config.json 放到仓库根目录。</p>
+  </div>
+</div>
+
+<!-- login modal -->
+<div class="modal-mask" id="loginMask">
+  <div class="modal">
+    <span class="close" data-close="loginMask">×</span>
+    <h3>登录 / 注册</h3>
+    <p class="hint">输入你的唯一凭据号（用户名）即可登录或注册，云端将同步该账号下所有数据。无需密码。</p>
+    <div class="login-row">
+      <input id="login_name" placeholder="凭据号 / 用户名" style="flex:1;min-width:180px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;background:var(--card);color:var(--ink)">
+      <button class="primary" id="loginGo">进入</button>
+    </div>
+    <p class="hint" id="loginNote"></p>
+  </div>
+</div>
+
+<!-- intro modal -->
+<div class="modal-mask" id="introMask">
+  <div class="modal"><span class="close" data-close="introMask">×</span><h3>📢 介绍</h3><div class="md" id="introBody"></div></div>
+</div>
+<!-- changelog modal -->
+<div class="modal-mask" id="changelogMask">
+  <div class="modal"><span class="close" data-close="changelogMask">×</span><h3>📝 更新日志</h3><div class="md" id="logBody"></div></div>
+</div>
+<!-- about modal -->
+<div class="modal-mask" id="aboutMask">
+  <div class="modal"><span class="close" data-close="aboutMask">×</span><h3>关于作者</h3><div class="md" id="aboutBody"></div></div>
+</div>
+<!-- announcement modal -->
+<div class="modal-mask" id="annMask">
+  <div class="modal">
+    <h3>📌 公告</h3>
+    <div class="md" id="annBody"></div>
+    <label style="display:flex;gap:6px;align-items:center;margin-top:10px;font-size:13px;color:var(--sub)"><input type="checkbox" id="annNoShow"> 今天不再显示</label>
+    <div class="modal-actions"><button class="primary" id="annClose">我知道了</button></div>
+  </div>
+</div>
+<!-- calendar help modal -->
+<div class="modal-mask" id="calHelpMask">
+  <div class="modal"><span class="close" data-close="calHelpMask">×</span><h3>📅 日历调度 · 使用说明</h3><div class="md" id="calHelpBody"></div></div>
+</div>
+<!-- usage modal -->
+<div class="modal-mask" id="usageMask">
+  <div class="modal"><span class="close" data-close="usageMask">×</span><h3>📖 使用说明</h3>
+    <ul class="big-list">
+      <li><b>项目：</b>顶部标签切换；<b>右键</b>项目名可「重命名 / 复制 / 删除」。</li>
+      <li><b>添加：</b>「共有 N 项」生成 N 条相同内容；不填日期默认 2026/8/31。</li>
+      <li><b>完成：</b>勾选框标记完成，移入「已完成」。</li>
+      <li><b>编辑 / 复杂度 / 不调配：</b>点「编辑」可改内容、日期、调配，并设置<b>复杂度（1-100，默认 50）</b>与「不调配」。</li>
+      <li><b>提醒：</b>逾期 / 今天 / 3 天内到期自动打标签。</li>
+      <li><b>进度：</b>总进度 + 按科目进度。</li>
+      <li><b>排序：</b>「按截止日期排序」截止靠前排前。</li>
+      <li><b>自动分配：</b>默认 / 复杂度低优先 / 高优先三种模式，均保持每日复杂度均衡；可设优先级科目、排除不调配。</li>
+      <li><b>每日任务：</b>显示当天完成数与总复杂度。</li>
+      <li><b>批量：</b>统一改截止日期 / 调配 / 复杂度 / 完成 / 删除。</li>
+      <li><b>撤回/复原：</b>↶ ↷ 按钮或 Ctrl+Z / Ctrl+Y。</li>
+      <li><b>登录/同步：</b>输入凭据号登录，云端同步（需配置后端）；<b>分享</b>生成只读链接给家人。</li>
+      <li><b>日历调度：</b>📅 进入，点任务→点日期调度；点类别/项目名或 Ctrl 多选→点日期按「一天几个」顺延；未选任务时点某日→点列表空白或「清空该日」按钮可取消该日全部任务。</li>
+      <li><b>重置默认 / 导入导出 / 深浅色 / 后台(🔧)。</b></li>
+    </ul>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORE_KEY = "homework_app_v2";
+const THEME_KEY = "homework_theme";
+const ACC_KEY = "homework_account";
+const SITECFG_KEY = "hw_siteconfig";
+const DEFAULT_ITEMS = [{"id": "p_default", "name": "暑假作业清单", "items": [{"id": "d0", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第1份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d1", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第2份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d2", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第3份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d3", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第4份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d4", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第5份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d5", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第6份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d6", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第7份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d7", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第8份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d8", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第9份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d9", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第10份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d10", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第11份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d11", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第12份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d12", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第13份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d13", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第14份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d14", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第15份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d15", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第16份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d16", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第17份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d17", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第18份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d18", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第19份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d19", "subject": "数学", "category": "试卷", "content": "数学暑假作业·试卷 第20份", "note": "完成《初一数学暑假作业》中的试卷", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d20", "subject": "数学", "category": "探究活动/专题", "content": "数学暑假作业·探究活动 第1项", "note": "最后2页探究活动三项，均需完成", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d21", "subject": "数学", "category": "探究活动/专题", "content": "数学暑假作业·探究活动 第2项", "note": "最后2页探究活动三项，均需完成", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d22", "subject": "数学", "category": "探究活动/专题", "content": "数学暑假作业·探究活动 第3项", "note": "最后2页探究活动三项，均需完成", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d23", "subject": "数学", "category": "趣味课堂", "content": "《趣味课堂》第1讲", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d24", "subject": "数学", "category": "趣味课堂", "content": "《趣味课堂》第2讲", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d25", "subject": "数学", "category": "趣味课堂", "content": "《趣味课堂》第3讲", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d26", "subject": "数学", "category": "趣味课堂", "content": "《趣味课堂》第4讲", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d27", "subject": "数学", "category": "趣味课堂", "content": "《趣味课堂》第5讲", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d28", "subject": "数学", "category": "趣味课堂", "content": "《趣味课堂》第6讲", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d29", "subject": "数学", "category": "趣味课堂", "content": "《趣味课堂》第7讲", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d30", "subject": "数学", "category": "趣味课堂", "content": "《趣味课堂》第8讲", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d31", "subject": "数学", "category": "趣味课堂", "content": "《趣味课堂》第9讲", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d32", "subject": "数学", "category": "趣味课堂", "content": "《趣味课堂》第10讲", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d33", "subject": "数学", "category": "趣味课堂", "content": "《趣味课堂》第11讲", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d34", "subject": "数学", "category": "趣味课堂", "content": "《趣味课堂》第12讲", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d35", "subject": "数学", "category": "趣味课堂", "content": "《趣味课堂》第13讲", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d36", "subject": "数学", "category": "趣味课堂", "content": "《趣味课堂》第14讲", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d37", "subject": "数学", "category": "趣味课堂", "content": "《趣味课堂》第15讲", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d38", "subject": "数学", "category": "预习", "content": "预习八上《一元一次不等式》", "note": "看\"浙江初中数学研究\"公众号微课；配套完成《全优方案》/《全品作业本》/《全效学习》基础部分", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d39", "subject": "数学", "category": "预习", "content": "预习八上《图形与坐标》", "note": "看\"浙江初中数学研究\"公众号微课；配套完成《全优方案》/《全品作业本》/《全效学习》基础部分", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d40", "subject": "数学", "category": "预习", "content": "预习八上《一次函数》", "note": "看\"浙江初中数学研究\"公众号微课；配套完成《全优方案》/《全品作业本》/《全效学习》基础部分", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d41", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第1首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d42", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第2首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d43", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第3首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d44", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第4首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d45", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第5首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d46", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第6首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d47", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第7首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d48", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第8首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d49", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第9首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d50", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第10首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d51", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第11首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d52", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第12首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d53", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第13首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d54", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第14首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d55", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第15首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d56", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第16首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d57", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第17首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d58", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第18首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d59", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第19首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d60", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第20首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d61", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第21首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d62", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第22首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d63", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第23首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d64", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第24首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d65", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第25首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d66", "subject": "语文", "category": "背诵默写", "content": "古诗文背默 第26首", "note": "册二，共26首", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d67", "subject": "语文", "category": "阅读", "content": "名著阅读 第1本", "note": "共2本", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d68", "subject": "语文", "category": "阅读", "content": "名著阅读 第2本", "note": "共2本", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d69", "subject": "语文", "category": "写作", "content": "写作 第1篇", "note": "共4篇", "deadline": "2026-08-31", "done": false, "day": "", "complex": 75, "noAuto": false}, {"id": "d70", "subject": "语文", "category": "写作", "content": "写作 第2篇", "note": "共4篇", "deadline": "2026-08-31", "done": false, "day": "", "complex": 75, "noAuto": false}, {"id": "d71", "subject": "语文", "category": "写作", "content": "写作 第3篇", "note": "共4篇", "deadline": "2026-08-31", "done": false, "day": "", "complex": 75, "noAuto": false}, {"id": "d72", "subject": "语文", "category": "写作", "content": "写作 第4篇", "note": "共4篇", "deadline": "2026-08-31", "done": false, "day": "", "complex": 75, "noAuto": false}, {"id": "d73", "subject": "语文", "category": "试卷", "content": "试卷 第1份", "note": "册一，共5份", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d74", "subject": "语文", "category": "试卷", "content": "试卷 第2份", "note": "册一，共5份", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d75", "subject": "语文", "category": "试卷", "content": "试卷 第3份", "note": "册一，共5份", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d76", "subject": "语文", "category": "试卷", "content": "试卷 第4份", "note": "册一，共5份", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d77", "subject": "语文", "category": "试卷", "content": "试卷 第5份", "note": "册一，共5份", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d78", "subject": "语文", "category": "本子", "content": "准备随笔本", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d79", "subject": "英语", "category": "典范词汇纸", "content": "典范词汇纸 第1份", "note": "在故事Notes中找出动词并标注原形", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d80", "subject": "英语", "category": "典范词汇纸", "content": "典范词汇纸 第2份", "note": "在故事Notes中找出动词并标注原形", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d81", "subject": "英语", "category": "典范词汇纸", "content": "典范词汇纸 第3份", "note": "在故事Notes中找出动词并标注原形", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d82", "subject": "英语", "category": "片段录音", "content": "典范片段录音 第1个", "note": "GE7-3/GE7-11/GE7-12选两本，每本约5分钟；命名：班级-姓名-内容；8月20日前发老师", "deadline": "8月20日前", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d83", "subject": "英语", "category": "片段录音", "content": "典范片段录音 第2个", "note": "GE7-3/GE7-11/GE7-12选两本，每本约5分钟；命名：班级-姓名-内容；8月20日前发老师", "deadline": "8月20日前", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d84", "subject": "英语", "category": "表演准备", "content": "典范英语表演准备", "note": "小班分三组选书分配角色，下学期表演", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d85", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第1篇", "note": "SMART STUDY: Teach to learn (A3)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d86", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第2篇", "note": "SMART STUDY: Mapping out success (A4)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d87", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第3篇", "note": "SMART STUDY: Learn, review, remember (A5)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d88", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第4篇", "note": "SMART STUDY: Time block practice (A6)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d89", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第5篇", "note": "SMART STUDY: Picture your facts (A7)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d90", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第6篇", "note": "ROBOTS TODAY: Meet Flash! (A10)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d91", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第7篇", "note": "ROBOTS TODAY: How robots learn (A11)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d92", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第8篇", "note": "HELLO, AFRICA: Amazing Africa (A12)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d93", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第9篇", "note": "HELLO, AFRICA: 'Fly' over Morocco (A14)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d94", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第10篇", "note": "HELLO, AFRICA: Cultures come together (A16)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d95", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第11篇", "note": "AMAZING NATURE: Arms with their own 'brains' (A18)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d96", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第12篇", "note": "AMAZING NATURE: Quiet climate heroes (A21)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d97", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第13篇", "note": "AMAZING NATURE: Crocodiles' secret superpower (A22)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d98", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第14篇", "note": "STEPPING UP: So much to celebrate (B2)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d99", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第15篇", "note": "STEPPING UP: Cheer with respect (B3)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d100", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第16篇", "note": "STEPPING UP: Healthy habits (B4)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d101", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第17篇", "note": "STEPPING UP: Making magic! (B5)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d102", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第18篇", "note": "STEPPING UP: Top cities to see (B8)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d103", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第19篇", "note": "STEPPING UP: The perfect bite (B10)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d104", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第20篇", "note": "STEPPING UP: Young legends (B11)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d105", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第21篇", "note": "SUMMER FUN: Movie magic fun! (C1)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d106", "subject": "英语", "category": "TEENS读报", "content": "TEENS文章 第22篇", "note": "SUMMER FUN: Music on the road (C2)", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d107", "subject": "英语", "category": "TEENS展示", "content": "TEENS专题PPT展示", "note": "任选话题做PPT，图文并茂2-3分钟；命名：班级-姓名-内容；8月20日前发老师", "deadline": "8月20日前", "done": false, "day": "", "complex": 80, "noAuto": false}, {"id": "d108", "subject": "英语", "category": "TEENS自测", "content": "TEENS综合能力自测题", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d109", "subject": "英语", "category": "新教材", "content": "准备新词汇本", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d110", "subject": "英语", "category": "新教材预习", "content": "预习八上 U1 词汇", "note": "写中文→默写→校对订正", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d111", "subject": "英语", "category": "新教材预习", "content": "预习八上 U2 词汇", "note": "写中文→默写→校对订正", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d112", "subject": "英语", "category": "新教材预习", "content": "预习八上 U3 词汇", "note": "写中文→默写→校对订正", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d113", "subject": "英语", "category": "新教材预习", "content": "预习八上 U4 词汇", "note": "写中文→默写→校对订正", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d114", "subject": "英语", "category": "新教材预习", "content": "预习八上 U5 词汇（选做）", "note": "要求同前", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d115", "subject": "英语", "category": "新教材预习", "content": "预习八上 U6 词汇（选做）", "note": "要求同前", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d116", "subject": "英语", "category": "新教材预习", "content": "预习八上 U7 词汇（选做）", "note": "要求同前", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d117", "subject": "英语", "category": "新教材预习", "content": "预习八上 U8 词汇（选做）", "note": "要求同前", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d118", "subject": "英语", "category": "写作", "content": "写作 第1篇", "note": "具体要求见后页", "deadline": "2026-08-31", "done": false, "day": "", "complex": 51, "noAuto": false}, {"id": "d119", "subject": "英语", "category": "写作", "content": "写作 第2篇", "note": "具体要求见后页", "deadline": "2026-08-31", "done": false, "day": "", "complex": 51, "noAuto": false}, {"id": "d120", "subject": "英语", "category": "展示", "content": "下学期初展示", "note": "典范英语表演 + Teens专题展示", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": false}, {"id": "d121", "subject": "科学", "category": "书面作业", "content": "复习练习 第1份", "note": "共5份", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d122", "subject": "科学", "category": "书面作业", "content": "复习练习 第2份", "note": "共5份", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d123", "subject": "科学", "category": "书面作业", "content": "复习练习 第3份", "note": "共5份", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d124", "subject": "科学", "category": "书面作业", "content": "复习练习 第4份", "note": "共5份", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d125", "subject": "科学", "category": "书面作业", "content": "复习练习 第5份", "note": "共5份", "deadline": "2026-08-31", "done": false, "day": "", "complex": 40, "noAuto": false}, {"id": "d126", "subject": "科学", "category": "预习", "content": "电路探秘作业本A", "note": "完成八上第3章电路探秘A本基础与巩固", "deadline": "2026-08-31", "done": false, "day": "", "complex": 90, "noAuto": false}, {"id": "d127", "subject": "科学", "category": "预习", "content": "电路探秘作业本B", "note": "完成八上第3章电路探秘B本基础与巩固", "deadline": "2026-08-31", "done": false, "day": "", "complex": 90, "noAuto": false}, {"id": "d128", "subject": "科学", "category": "微课打卡", "content": "电路探秘微课", "note": "扫描二维码学习，开学前完成", "deadline": "开学前", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d129", "subject": "社会", "category": "历史文创", "content": "历史文创丝巾设计", "note": "二选一手绘/电脑设计，发邮箱ningwaishehui@163.com", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d130", "subject": "社会", "category": "历史思维导图", "content": "八上历史第一单元思维导图", "note": "", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d131", "subject": "社会", "category": "历史视频", "content": "《中国通史》第98集 甲午战争", "note": "B站搜索，整理思维导图", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d132", "subject": "社会", "category": "历史视频", "content": "《中国通史》第99集 维新与革命", "note": "B站搜索，整理思维导图", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d133", "subject": "社会", "category": "历史视频", "content": "《中国通史》第100集 帝制的终结", "note": "B站搜索，整理思维导图", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d134", "subject": "社会", "category": "地理", "content": "中国省级行政区划图", "note": "A4，参考八上地理课本第8页，识记34省区", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d135", "subject": "社会", "category": "地理", "content": "拼图游戏（选做）", "note": "2分钟内完成", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}, {"id": "d136", "subject": "社会", "category": "道法", "content": "时政小报", "note": "A4，6-8月正向素材，2-3板块", "deadline": "2026-08-31", "done": false, "day": "", "complex": 50, "noAuto": true}]}];
+const DEFAULT_SITE = {"adminPassword": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", "syncKey": "", "announcement": "", "intro": "# 暑假作业清单 · 任务管理\n\n这是一个帮你规划暑假作业的小工具：\n\n- 按**科目 → 类别**分项管理作业\n- 支持**勾选完成、调配到具体日期、批量操作**\n- 内置**自动分配**算法，综合考虑优先级、截止日期与复杂度，让每天负担尽量均衡\n- 支持**多项目**隔离、本地保存、导出备份\n- 右键项目名可复制 / 重命名 / 删除\n\n祝暑假充实而有序 🌞", "about": "## 关于作者\n\n- 洛谷：[yanzie](https://www.luogu.com.cn/user/476430)\n- 主页：<https://www.luogu.com.cn/user/1647088>\n- 微信 / QQ：`13646680423`（临时）", "changelog": "# 更新日志\n\n## V2.4.0\n- 后台密码改为 **SHA-256 哈希**存储；云端同步支持 `syncKey` 校验。\n- 日历调度增强：**未选中任务时点某日**进入「取消模式」，点左侧列表空白或「清空该日」按钮可将该日全部任务退回未调度；已调度任务可改期。\n- 修复新建默认账户时 `currentId` 与项目不匹配的隐患；提供零成本 Cloudflare Worker 云端同步方案。\n\n## V2.3.0\n- 新增**小后台**：密码进入后可修改公告、介绍、关于作者、更新日志、默认数据、日历帮助（均支持 Markdown），并导出 `site-config.json` 发布。\n- 新增**登录/注册**：输入唯一凭据号即可登录，支持云端同步（需配置 syncEndpoint）。\n- 新增**分享**：生成只读链接，家人免登录查看进度。\n- 新增**日历调度模式**：左侧任务列表 + 右侧月历，点任务再点日期即可调度；点分组名/多选可批量顺延分配。\n- 移动端优化。\n\n## V2.2.0\n- 撤回/复原（按钮 + Ctrl+Z / Ctrl+Y）；自动分配新增复杂度低/高优先模式；每日任务显示当天总复杂度；新增「重置默认」。\n\n## V2.1.0\n- 项目右键重命名；任务复杂度与不调配开关；自动分配最小负载均衡。\n\n## V2.0.0\n- 批量操作、自动分配、总进度、排序提醒、项目复制、深浅色、说明/日志/关于面板。\n\n## V1.0.0\n- 初始版本：导入清单、增删改查、勾选完成、调配、多项目、本地存储、导入导出。", "calendarHelp": "## 日历调度模式 · 使用说明\n\n1. 进入模式后，左侧列出**所有项目及其未完成任务**（含标记为「不调配」的任务），已安排日期的任务会在右侧显示数量。\n2. **单个任务安排**：先点左侧某条任务，再点右侧日历上的某一天，该任务就会被安排到那天。\n3. **整组 / 整个项目**：点左侧的「类别名」或「项目名」，再点某天，会弹出「一天放几个任务」，输入 `a` 后，该组任务从这天起每天放 `a` 个、顺延排完。\n4. **多选**：按住 `Ctrl` 点多条任务（或组）进行多选，再点某天，同样按「一天放几个」顺延分配。\n5. **改期**：已安排的任务点选后，再点别的日期即可改到那天。\n6. **取消某日全部任务**：**未选中任何任务时**点右侧某一天，进入「取消模式」，然后点左侧列表空白处或顶部「🗑 清空该日任务」按钮，即可把那天的所有任务退回未调度列表。\n7. 无需真实拖拽，点选即可，点「退出日历」保存并退出。", "defaultData": null, "syncEndpoint": ""};
+
+let siteConfig = JSON.parse(JSON.stringify(DEFAULT_SITE));
+let state = { projects: DEFAULT_ITEMS, currentId: DEFAULT_ITEMS[0].id };
+let account = null;
+let readOnly = false;
+let sharedData = null;
+
+let curSec = "pending";
+let editingId = null;
+let batchMode = false;
+let selectedIds = new Set();
+let sortByDeadline = false;
+let ctxTargetId = null;
+
+/* ---------- undo / redo ---------- */
+let history = [];
+let future = [];
+function pushHistory(){
+  if(readOnly) return;
+  history.push(JSON.stringify(state));
+  if(history.length>60) history.shift();
+  future = [];
+  updateUndoButtons();
+}
+function undo(){
+  if(history.length===0){ toast("没有可撤销的操作"); return; }
+  future.push(JSON.stringify(state));
+  state = JSON.parse(history.pop());
+  selectedIds.clear(); editingId=null;
+  save(); renderAll(); updateUndoButtons();
+}
+function redo(){
+  if(future.length===0){ toast("没有可重做的操作"); return; }
+  history.push(JSON.stringify(state));
+  state = JSON.parse(future.pop());
+  selectedIds.clear(); editingId=null;
+  save(); renderAll(); updateUndoButtons();
+}
+function updateUndoButtons(){
+  document.getElementById("undoBtn").disabled = history.length===0;
+  document.getElementById("redoBtn").disabled = future.length===0;
+}
+function isTyping(){
+  const a=document.activeElement;
+  if(!a) return false;
+  const t=a.tagName;
+  return t==="INPUT"||t==="TEXTAREA"||a.isContentEditable;
+}
+document.addEventListener("keydown",e=>{
+  if(!(e.ctrlKey||e.metaKey)) return;
+  const k=e.key.toLowerCase();
+  if(k==="z" && !e.shiftKey){ e.preventDefault(); if(!isTyping()) undo(); }
+  else if(k==="y" || (k==="z" && e.shiftKey)){ e.preventDefault(); if(!isTyping()) redo(); }
+});
+
+/* ---------- markdown ---------- */
+function mdInline(s){
+  s=s.replace(/`([^`]+)`/g,'<code>$1</code>');
+  s=s.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
+  s=s.replace(/(^|[^*])\*([^*]+)\*/g,'$1<i>$2</i>');
+  s=s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  return s;
+}
+function md2html(src){
+  if(!src) return "";
+  const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const lines=src.replace(/\r/g,'').split("\n");
+  let html=""; let listBuf=[];
+  const flush=()=>{ if(listBuf.length){ html+="<ul>"+listBuf.map(x=>"<li>"+x+"</li>").join("")+"</ul>"; listBuf=[]; } };
+  for(let raw of lines){
+    const line=esc(raw);
+    let m=line.match(/^(#{1,4})\s+(.*)/);
+    if(m){ flush(); const l=m[1].length; html+=`<h${l}>`+mdInline(m[2])+`</h${l}>`; continue; }
+    if(/^\s*[-*]\s+/.test(line)){ listBuf.push(mdInline(line.replace(/^\s*[-*]\s+/,''))); continue; }
+    flush();
+    if(line.trim()===""){ html+="<br>"; continue; }
+    html+="<p>"+mdInline(line)+"</p>";
+  }
+  flush();
+  return html;
+}
+
+/* ---------- storage ---------- */
+function dataKey(){ return "hw_data_"+(account||"_anon"); }
+function load(){
+  try{ const raw=localStorage.getItem(dataKey()); if(raw) return JSON.parse(raw); }catch(e){}
+  return null;
+}
+function save(){
+  if(readOnly) return;
+  try{ localStorage.setItem(dataKey(), JSON.stringify(state)); }catch(e){}
+  cloudSave();
+}
+function curProj(){ return state.projects.find(p=>p.id===state.currentId) || state.projects[0]; }
+function uid(){ return "i"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function findItemGlobal(id){
+  for(const p of state.projects){ const it=p.items.find(x=>x.id===id); if(it) return it; }
+  return null;
+}
+function makeDefaultProject(){
+  let data = siteConfig.defaultData;
+  if(!data || !Array.isArray(data) || data.length===0) data = DEFAULT_ITEMS;
+  const clone = JSON.parse(JSON.stringify(data));
+  clone.forEach(pr=>{ pr.items.forEach(it=>{ if(!it.id) it.id=uid(); if(it.complex==null) it.complex=50; if(it.noAuto==null) it.noAuto=false; }); });
+  return clone;
+}
+
+/* ---------- cloud sync (pluggable) ---------- */
+async function cloudSave(){
+  if(readOnly || !account || !siteConfig.syncEndpoint) return;
+  try{
+    const headers={'content-type':'application/json'};
+    if(siteConfig.syncKey) headers['x-sync-key']=siteConfig.syncKey;
+    await fetch(siteConfig.syncEndpoint, {method:'PUT', headers,
+      body:JSON.stringify({account, data:state})});
+  }catch(e){}
+}
+async function cloudLoad(){
+  if(!account || !siteConfig.syncEndpoint) return null;
+  try{
+    const r=await fetch(siteConfig.syncEndpoint+'?account='+encodeURIComponent(account));
+    if(r.ok) return await r.json();
+  }catch(e){}
+  return null;
+}
+
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800);
+}
+
+/* ---------- theme ---------- */
+function initTheme(){
+  const saved = localStorage.getItem(THEME_KEY) || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  setTheme(saved);
+}
+function setTheme(mode){
+  document.documentElement.setAttribute('data-theme', mode);
+  localStorage.setItem(THEME_KEY, mode);
+  document.getElementById('themeBtn').textContent = mode==='dark' ? '☀️' : '🌙';
+}
+
+/* ---------- site config ---------- */
+async function loadSiteConfig(){
+  let base = JSON.parse(JSON.stringify(DEFAULT_SITE));
+  try{
+    const r=await fetch('./site-config.json',{cache:'no-store'});
+    if(r.ok){ const j=await r.json(); base=Object.assign(base, j); }
+  }catch(e){}
+  let over=null;
+  try{ const raw=localStorage.getItem(SITECFG_KEY); if(raw) over=JSON.parse(raw); }catch(e){}
+  if(over) base=Object.assign(base, over);
+  if(typeof base.defaultData==="string"){ try{ base.defaultData=JSON.parse(base.defaultData); }catch(e){ base.defaultData=null; } }
+  siteConfig=base;
+}
+function saveSiteConfig(){
+  localStorage.setItem(SITECFG_KEY, JSON.stringify(siteConfig));
+}
+
+/* ---------- tabs / context menu ---------- */
+function renderTabs(){
+  const box=document.getElementById("tabs");
+  box.innerHTML="";
+  state.projects.forEach(p=>{
+    const el=document.createElement("div");
+    el.className="tab"+(p.id===state.currentId?" active":"");
+    el.dataset.id=p.id;
+    const name=document.createElement("span");
+    name.textContent=p.name;
+    name.onclick=()=>{ if(readOnly)return; state.currentId=p.id; save(); renderAll(); };
+    el.oncontextmenu=e=>{ if(readOnly)return; showCtx(e,p.id); };
+    el.appendChild(name);
+    if(!readOnly && state.projects.length>1){
+      const x=document.createElement("span");
+      x.className="x"; x.textContent="✕"; x.title="删除该项目";
+      x.onclick=(ev)=>{ ev.stopPropagation(); delProj(p.id); };
+      el.appendChild(x);
+    }
+    box.appendChild(el);
+  });
+}
+function showCtx(e,id){
+  e.preventDefault(); ctxTargetId=id;
+  const m=document.getElementById("ctxMenu");
+  m.style.display="block"; m.style.left=e.clientX+"px"; m.style.top=e.clientY+"px";
+}
+function hideCtx(){ document.getElementById("ctxMenu").style.display="none"; ctxTargetId=null; }
+function copyProj(id){
+  const p=state.projects.find(x=>x.id===id); if(!p) return;
+  pushHistory();
+  const np={ id:"p_"+uid(), name:p.name+"-副本", items: JSON.parse(JSON.stringify(p.items)) };
+  np.items.forEach(it=>it.id=uid());
+  state.projects.push(np); state.currentId=np.id; save(); renderAll();
+  toast("已复制项目："+np.name);
+}
+function delProj(id){
+  if(!confirm("确定删除该项目及其全部任务？此操作不可恢复。")) return;
+  pushHistory();
+  state.projects=state.projects.filter(p=>p.id!==id);
+  if(state.currentId===id || !state.projects.find(p=>p.id===state.currentId)) state.currentId=state.projects[0].id;
+  save(); renderAll();
+}
+function renameProj(id){
+  const p=state.projects.find(x=>x.id===id); if(!p) return;
+  const name=prompt("修改项目名称：", p.name);
+  if(!name || !name.trim()) return;
+  pushHistory();
+  p.name=name.trim(); save(); renderAll();
+  toast("已重命名为："+p.name);
+}
+function resetDefault(){
+  if(!confirm("确定将「暑假作业清单」恢复为初始默认内容？此操作会覆盖该项目的当前任务（其余自定义项目不受影响）。")) return;
+  pushHistory();
+  const def=makeDefaultProject()[0];
+  let p=state.projects.find(x=>x.id==="p_default");
+  if(p){ p.items=def.items; }
+  else { state.projects.push(def); }
+  state.currentId="p_default";
+  save(); renderAll();
+  toast("已重置为默认清单");
+}
+
+/* ---------- grouping / sorting ---------- */
+function groupItems(items){
+  const bySubj={};
+  items.forEach(it=>{
+    const s=it.subject||"未分类"; const c=it.category||"其他";
+    bySubj[s]=bySubj[s]||{}; bySubj[s][c]=bySubj[s][c]||[]; bySubj[s][c].push(it);
+  });
+  return bySubj;
+}
+function parseDate(s){ if(!s) return null; const d=new Date(s); return isNaN(d)?null:d; }
+function daysUntil(s){
+  const d=parseDate(s); if(!d) return null;
+  const today=new Date(); today.setHours(0,0,0,0);
+  return Math.round((d-today)/(1000*60*60*24));
+}
+function deadlineTag(s){
+  const diff=daysUntil(s); if(diff===null) return "";
+  if(diff<0) return '<span class="tag warn">已逾期</span>';
+  if(diff===0) return '<span class="tag dead">今天到期</span>';
+  if(diff<=3) return '<span class="tag safe">'+diff+'天后到期</span>';
+  return "";
+}
+function sortItemsByDeadline(items){
+  return items.slice().sort((a,b)=>{
+    const da=parseDate(a.deadline), db=parseDate(b.deadline);
+    if(da && db) return da-db; if(da) return -1; if(db) return 1; return 0;
+  });
+}
+function renderGroup(container, items){
+  if(items.length===0){ container.innerHTML='<div class="empty">这里还没有任务 🎉</div>'; return; }
+  if(sortByDeadline && curSec==="pending"){ renderDeadlineSorted(container, items); return; }
+  const bySubj=groupItems(items); let html="";
+  Object.keys(bySubj).forEach(subj=>{
+    const total=Object.values(bySubj[subj]).reduce((a,b)=>a+b.length,0);
+    html+=`<div class="group"><div class="group-title">${esc(subj)} <span class="badge">${total} 项</span></div>`;
+    Object.keys(bySubj[subj]).forEach(cat=>{
+      html+=`<div class="sub-group"><div class="sub-title">${esc(cat)}</div>`;
+      bySubj[subj][cat].forEach(it=>{ html+=itemHtml(it); });
+      html+=`</div>`;
+    });
+    html+=`</div>`;
+  });
+  container.innerHTML=html; bindItemEvents(container);
+}
+function renderDeadlineSorted(container, items){
+  const sorted=sortItemsByDeadline(items); let html=""; let last="";
+  sorted.forEach(it=>{
+    const d=parseDate(it.deadline); const key=d?d.toISOString().slice(0,10):"其他";
+    if(key!==last){ html+=`<div class="deadline-section"><h4>${key}</h4>`; last=key; }
+    html+=itemHtml(it);
+  });
+  if(last) html+=`</div>`;
+  container.innerHTML=html || '<div class="empty">这里还没有任务 🎉</div>';
+  bindItemEvents(container);
+}
+function itemHtml(it){
+  const done=it.done; const tags=[];
+  if(it.deadline) tags.push(`<span class="tag dead">📅 ${esc(it.deadline)}</span>`+deadlineTag(it.deadline));
+  if(it.day) tags.push(`<span class="tag day">🗓 ${esc(it.day)}</span>`);
+  if(it.noAuto) tags.push('<span class="tag" style="background:var(--red-bg);color:var(--red)">🚫不调配</span>');
+  else if(it.complex!=null && it.complex!=50) tags.push(`<span class="tag">⚙${it.complex}</span>`);
+  const note=it.note?`<div class="nt">${esc(it.note)}</div>`:"";
+  const ops = readOnly ? "" : `<div class="ops"><button class="ghost" data-act="edit">编辑</button><button class="ghost" data-act="day">调配</button><button class="danger" data-act="del">删除</button></div>`;
+  return `<div class="item ${done?'done':''}" data-id="${it.id}">
+    <input type="checkbox" class="sel" ${selectedIds.has(it.id)?'checked':''}>
+    <input type="checkbox" class="cb" ${done?'checked':''}>
+    <div class="body"><div class="ct">${esc(it.content)}</div>${note}<div class="tags">${tags.join("")}</div></div>
+    ${ops}</div>`;
+}
+function bindItemEvents(container){
+  container.querySelectorAll(".item").forEach(el=>{
+    const id=el.dataset.id;
+    const sel=el.querySelector(".sel");
+    if(sel) sel.onchange=e=>{ if(e.target.checked) selectedIds.add(id); else selectedIds.delete(id); updateBatchInfo(); };
+    el.querySelector(".cb").onchange=e=>{ toggleDone(id, e.target.checked); };
+    const ed=el.querySelector('[data-act="edit"]'); if(ed) ed.onclick=()=>openEdit(id);
+    const dy=el.querySelector('[data-act="day"]'); if(dy) dy.onclick=()=>openEdit(id, true);
+    const dl=el.querySelector('[data-act="del"]'); if(dl) dl.onclick=()=>delItem(id);
+  });
+}
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* ---------- actions ---------- */
+function toggleDone(id, val){
+  const it=curProj().items.find(x=>x.id===id);
+  if(it){ pushHistory(); it.done=val; save(); renderViews(); }
+}
+function delItem(id){
+  if(!confirm("删除这条任务？")) return;
+  const p=curProj(); pushHistory();
+  p.items=p.items.filter(x=>x.id!==id); selectedIds.delete(id);
+  save(); renderViews();
+}
+function addItems(){
+  pushHistory();
+  const subj=document.getElementById("f_subject").value.trim()||"未分类";
+  const cat=document.getElementById("f_category").value.trim()||"其他";
+  const content=document.getElementById("f_content").value.trim();
+  const note=document.getElementById("f_note").value.trim();
+  let deadline=document.getElementById("f_deadline").value; if(!deadline) deadline="2026-08-31";
+  let count=parseInt(document.getElementById("f_count").value)||1; if(count<1) count=1;
+  if(!content){ toast("请填写作业内容"); return; }
+  const p=curProj();
+  for(let i=1;i<=count;i++){
+    const c=count>1?`${content} 第${i}项`:content;
+    p.items.push({ id:uid(), subject:subj, category:cat, content:c, note, deadline, done:false, day:"", complex:50, noAuto:false });
+  }
+  save();
+  ["f_content","f_note"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("f_count").value=1;
+  toast(`已添加 ${count} 项到「${p.name}」`);
+  renderViews();
+}
+
+/* ---------- edit modal ---------- */
+function openEdit(id, focusDay){
+  const it=curProj().items.find(x=>x.id===id); if(!it) return;
+  editingId=id;
+  document.getElementById("e_subject").value=it.subject;
+  document.getElementById("e_category").value=it.category;
+  document.getElementById("e_content").value=it.content;
+  document.getElementById("e_note").value=it.note;
+  document.getElementById("e_deadline").value=it.deadline;
+  document.getElementById("e_day").value=it.day;
+  document.getElementById("e_complex").value=it.complex!=null?it.complex:50;
+  document.getElementById("e_noauto").checked=!!it.noAuto;
+  document.getElementById("modalMask").classList.add("show");
+  if(focusDay) document.getElementById("e_day").focus();
+}
+function closeEdit(){ document.getElementById("modalMask").classList.remove("show"); editingId=null; }
+function saveEdit(){
+  const it=curProj().items.find(x=>x.id===editingId);
+  if(it){
+    pushHistory();
+    it.subject=document.getElementById("e_subject").value.trim()||"未分类";
+    it.category=document.getElementById("e_category").value.trim()||"其他";
+    it.content=document.getElementById("e_content").value.trim();
+    it.note=document.getElementById("e_note").value.trim();
+    it.deadline=document.getElementById("e_deadline").value;
+    it.day=document.getElementById("e_day").value;
+    let cx=parseInt(document.getElementById("e_complex").value); if(isNaN(cx)) cx=50; cx=Math.max(1,Math.min(100,cx));
+    it.complex=cx; it.noAuto=document.getElementById("e_noauto").checked;
+    save(); renderViews();
+  }
+  closeEdit();
+}
+
+/* ---------- progress ---------- */
+function renderProgress(){
+  const p=curProj();
+  const total=p.items.length;
+  const done=p.items.filter(x=>x.done).length;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById("totalBar").style.width=pct+"%";
+  document.getElementById("progressMeta").textContent=`${pct}% · ${done}/${total}`;
+  document.getElementById("statRow").innerHTML=`<span>总任务 ${total}</span><span>已完成 ${done}</span><span>待完成 ${total-done}</span>`;
+  const subs={};
+  p.items.forEach(it=>{ subs[it.subject]=(subs[it.subject]||{t:0,d:0}); subs[it.subject].t++; if(it.done) subs[it.subject].d++; });
+  let html="";
+  Object.keys(subs).forEach(s=>{
+    const o=subs[s]; const pct2=o.t?Math.round(o.d/o.t*100):0;
+    html+=`<div class="sub-progress"><span style="min-width:48px">${esc(s)}</span><div class="bar"><div class="fill" style="width:${pct2}%"></div></div><span style="min-width:40px;text-align:right">${pct2}%</span></div>`;
+  });
+  document.getElementById("subProgress").innerHTML=html;
+}
+
+/* ---------- views ---------- */
+function renderViews(){
+  renderProgress();
+  const p=curProj();
+  const pending=p.items.filter(x=>!x.done);
+  const done=p.items.filter(x=>x.done);
+  document.getElementById("viewPending").style.display = (curSec==="pending" && !calMode)?"block":"none";
+  document.getElementById("viewDone").style.display = (curSec==="done" && !calMode)?"block":"none";
+  document.getElementById("viewDay").style.display = (curSec==="day" && !calMode)?"block":"none";
+  document.getElementById("viewCal").style.display = calMode?"block":"none";
+  document.getElementById("curTitle").textContent = curSec==="done"?"已完成":curSec==="day"?"每日任务（调配）":"待完成";
+  renderGroup(document.getElementById("viewPending"), pending);
+  renderGroup(document.getElementById("viewDone"), done);
+  renderDayBoard(p);
+  if(calMode) renderCalendar();
+  updateBatchInfo();
+}
+function renderDayBoard(p){
+  const dated=p.items.filter(x=>x.day);
+  const byDay={}; dated.forEach(it=>{ byDay[it.day]=byDay[it.day]||[]; byDay[it.day].push(it); });
+  const days=Object.keys(byDay).sort(); let html="";
+  if(days.length===0){ html='<div class="day-empty">还没有调配任何任务到具体日期。在任务上点「调配」选择日期即可。</div>'; }
+  else{ days.forEach(d=>{
+    const list=byDay[d]; const doneN=list.filter(x=>x.done).length;
+    const cxSum=list.reduce((a,x)=>a+(x.complex||50),0);
+    html+=`<div class="day-col"><h3>🗓 ${esc(d)} <span class="prog">${doneN}/${list.length} 完成 · 复杂度 ${cxSum}</span></h3>`;
+    list.forEach(it=>{ html+=itemHtml(it); }); html+=`</div>`;
+  }); }
+  const box=document.getElementById("viewDay"); box.innerHTML=html; bindItemEvents(box);
+}
+function renderAll(){ renderTabs(); renderViews(); }
+
+/* ---------- batch ---------- */
+function toggleBatch(){
+  batchMode=!batchMode; document.body.classList.toggle("batch-mode", batchMode);
+  document.getElementById("batchToggle").classList.toggle("active", batchMode);
+  if(!batchMode) selectedIds.clear();
+  updateBatchInfo();
+}
+function updateBatchInfo(){ document.getElementById("batchInfo").textContent=`已选 ${selectedIds.size} 项`; }
+function getSelectedItems(){ return curProj().items.filter(it=>selectedIds.has(it.id)); }
+function batchSet(field, val){
+  const items=getSelectedItems(); if(items.length===0){ toast("请先勾选要修改的任务"); return; }
+  pushHistory();
+  if(field==="complex"){ val=Math.max(1,Math.min(100, parseInt(val)||50)); }
+  items.forEach(it=>{ it[field]=val; });
+  save(); renderViews(); toast(`已更新 ${items.length} 项`);
+}
+function batchDelete(){
+  const items=getSelectedItems(); if(items.length===0){ toast("请先勾选要删除的任务"); return; }
+  if(!confirm(`确定删除选中的 ${items.length} 项任务？`)) return;
+  pushHistory();
+  const p=curProj(); const delSet=new Set(selectedIds);
+  p.items=p.items.filter(it=>!delSet.has(it.id)); selectedIds.clear();
+  save(); renderViews(); toast(`已删除 ${items.length} 项`);
+}
+
+/* ---------- auto assign ---------- */
+function openAutoAssign(){
+  const p=curProj(); const pending=p.items.filter(x=>!x.done);
+  const dates=pending.map(x=>parseDate(x.deadline)).filter(x=>x);
+  const max=dates.length?new Date(Math.max(...dates)) : new Date("2026-08-31");
+  const today=new Date(); today.setHours(0,0,0,0);
+  document.getElementById("auto_start").value=today.toISOString().slice(0,10);
+  document.getElementById("auto_end").value=max.toISOString().slice(0,10);
+  document.getElementById("autoModalMask").classList.add("show");
+}
+function runAutoAssign(){
+  const startInput=document.getElementById("auto_start").value;
+  const endInput=document.getElementById("auto_end").value;
+  if(!startInput || !endInput){ toast("请选择起止日期"); return; }
+  const start=new Date(startInput), end=new Date(endInput);
+  if(start>end){ toast("结束日期不能早于开始日期"); return; }
+  const days=[]; for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)) days.push(new Date(d).toISOString().slice(0,10));
+  if(days.length===0){ toast("日期范围无效"); return; }
+  pushHistory();
+  const scope=document.getElementById("auto_scope").value;
+  const priorityRaw=document.getElementById("auto_priority").value;
+  const excludeNoAuto=document.getElementById("auto_exclude").checked;
+  const mode=document.getElementById("auto_mode").value;
+  const p=curProj();
+  let pool=p.items.filter(x=>!x.done);
+  if(excludeNoAuto) pool=pool.filter(x=>!x.noAuto);
+  if(scope==="empty") pool=pool.filter(x=>!x.day);
+  if(pool.length===0){ toast("没有需要分配的任务"); return; }
+  const endStr=days[days.length-1];
+  const prioList=priorityRaw.split(/[,，]/).map(s=>s.trim()).filter(Boolean);
+  function rank(subj){ const i=prioList.indexOf(subj); return i<0?prioList.length:i; }
+  function taskDeadline(t){ const d=parseDate(t.deadline); return d?d.toISOString().slice(0,10):endStr; }
+  function cx(t){ return t.complex||50; }
+  pool.sort((a,b)=>{
+    const ra=rank(a.subject), rb=rank(b.subject);
+    const da=taskDeadline(a), db=taskDeadline(b);
+    if(mode==="low"){ const ca=cx(a),cb=cx(b); if(ca!==cb) return ca-cb; if(da!==db) return da<db?-1:1; if(ra!==rb) return ra-rb; return 0; }
+    else if(mode==="high"){ const ca=cx(a),cb=cx(b); if(ca!==cb) return cb-ca; if(da!==db) return da<db?-1:1; if(ra!==rb) return ra-rb; return 0; }
+    else { if(ra!==rb) return ra-rb; if(da!==db) return da<db?-1:1; return cb-ca; }
+  });
+  const load=new Array(days.length).fill(0); let assigned=0;
+  pool.forEach(t=>{
+    const dl=taskDeadline(t); let feasible=[];
+    days.forEach((d,i)=>{ if(d<=dl) feasible.push(i); });
+    if(feasible.length===0){ days.forEach((d,i)=>feasible.push(i)); }
+    let best=feasible[0]; feasible.forEach(i=>{ if(load[i]<load[best]) best=i; });
+    t.day=days[best]; load[best]+=(t.complex||50); assigned++;
+  });
+  save(); renderViews();
+  document.getElementById("autoModalMask").classList.remove("show");
+  toast(`已分配 ${assigned} 项到 ${days.length} 天（尽量均衡每日复杂度）`);
+}
+
+/* ---------- calendar mode ---------- */
+let calMode=false;
+let calSel={ ids:[], mode:"item" };
+let calCancelDay=null;
+let calY, calM;
+function toggleCal(){
+  calMode=!calMode;
+  calCancelDay=null;
+  document.getElementById("calBtn").textContent = calMode?"退出日历":"📅 日历";
+  document.getElementById("calBtn").classList.toggle("active", calMode);
+  document.getElementById("mainCard").querySelector(".sec-tabs").style.display = calMode?"none":"flex";
+  document.getElementById("sortDeadline").style.display = calMode?"none":"inline-block";
+  document.getElementById("autoAssignBtn").style.display = calMode?"none":"inline-block";
+    if(calMode){
+      const now=new Date(); calY=now.getFullYear(); calM=now.getMonth();
+      if(siteConfig.calendarHelp){ document.getElementById("calHelpBody").innerHTML=md2html(siteConfig.calendarHelp); showModal("calHelpMask"); }
+      renderCalendar();
+    }
+  renderViews();
+}
+function calSelect(ids, mode, additive){
+  calCancelDay=null;
+  if(additive){ calSel.ids=calSel.ids.concat(ids.filter(x=>!calSel.ids.includes(x))); calSel.mode="multi"; }
+  else { calSel={ ids:ids.slice(), mode:mode }; }
+  renderCalendarList();
+}
+function renderCalendarList(){
+  const box=document.getElementById("calList");
+  if(readOnly){ box.innerHTML='<div class="empty">只读模式不支持调度</div>'; return; }
+  let html="";
+  if(calCancelDay){
+    html+=`<div class="cal-cancel-banner" id="calCancelBanner">📅 已选 <b>${esc(calCancelDay)}</b> · 点此或点列表空白处取消该日全部任务<div class="grow"></div><button id="calCancelBtn" class="danger">🗑 清空 ${esc(calCancelDay)} 任务</button></div>`;
+  }
+  state.projects.forEach(p=>{
+    html+=`<div class="proj-h" data-proj="${p.id}">📁 ${esc(p.name)}</div>`;
+    const byCat={};
+    p.items.filter(x=>!x.done).forEach(it=>{ const c=it.category||"其他"; (byCat[c]=byCat[c]||[]).push(it); });
+    Object.keys(byCat).forEach(cat=>{
+      const ids=byCat[cat].map(x=>x.id);
+      const sel=ids.every(id=>calSel.ids.includes(id)) && calSel.ids.length>0;
+      html+=`<div class="cat-h" data-ids='${JSON.stringify(ids)}' style="${sel?'color:#fff;background:var(--primary);padding:3px 6px;border-radius:6px':''}">▸ ${esc(cat)}（${ids.length}）</div>`;
+      byCat[cat].forEach(it=>{
+        const s=calSel.ids.includes(it.id);
+        html+=`<div class="li ${s?'sel':''}" data-id="${it.id}"><span>${esc(it.content)}</span><span class="d">${it.day?('🗓'+it.day):(it.noAuto?'🚫':'')}</span></div>`;
+      });
+    });
+  });
+  box.innerHTML=html;
+  const banner=document.getElementById("calCancelBanner");
+  if(banner) banner.onclick=()=>cancelDay(calCancelDay);
+  const cb=document.getElementById("calCancelBtn");
+  if(cb) cb.onclick=(e)=>{ e.stopPropagation(); cancelDay(calCancelDay); };
+  box.onclick=(e)=>{ if(calCancelDay && e.target===box) cancelDay(calCancelDay); };
+  box.querySelectorAll(".li").forEach(el=>{
+    el.onclick=e=>{ e.stopPropagation(); const id=el.dataset.id; if(e.ctrlKey||e.metaKey) calSelect([id],"multi",true); else calSelect([id],"item",false); };
+  });
+  box.querySelectorAll(".cat-h").forEach(el=>{
+    el.onclick=e=>{ e.stopPropagation(); const ids=JSON.parse(el.dataset.ids); if(e.ctrlKey||e.metaKey) calSelect(ids,"multi",true); else calSelect(ids,"group",false); };
+  });
+  box.querySelectorAll(".proj-h").forEach(el=>{
+    el.onclick=e=>{ e.stopPropagation(); const p=state.projects.find(x=>x.id===el.dataset.proj); const ids=p.items.filter(x=>!x.done).map(x=>x.id); if(e.ctrlKey||e.metaKey) calSelect(ids,"multi",true); else calSelect(ids,"group",false); };
+  });
+}
+function renderCalendar(){
+  renderCalendarList();
+  const tbl=document.getElementById("calTable");
+  const monthNames=["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
+  document.getElementById("calTitle").textContent=`${calY} 年 ${monthNames[calM]}`;
+  // gather day->tasks across all projects
+  const byDay={};
+  state.projects.forEach(p=>p.items.forEach(it=>{ if(it.day){ (byDay[it.day]=byDay[it.day]||[]).push(it); } }));
+  const first=new Date(calY,calM,1); const startDay=(first.getDay()+6)%7;
+  const daysInMonth=new Date(calY,calM+1,0).getDate();
+  let html="<tr><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th><th>日</th></tr><tr>";
+  for(let i=0;i<startDay;i++) html+="<td></td>";
+  const today=new Date(); const tstr=today.toISOString().slice(0,10);
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=`${calY}-${String(calM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const list=byDay[ds]||[];
+    const has=list.length>0;
+    const cls=(ds===tstr?"today ":"")+(has?"has":"")+(ds===calCancelDay?" cancel-sel":"");
+    const mini=list.slice(0,3).map(x=>`<div>${esc(x.content).slice(0,10)}</div>`).join("");
+    html+=`<td class="${cls}" data-date="${ds}"><div class="dnum">${d}</div>${has?`<div class="cnt">${list.length} 项</div>${mini}`:""}</td>`;
+    if((startDay+d)%7===0) html+="</tr><tr>";
+  }
+  html+="</tr>";
+  tbl.innerHTML=html;
+  tbl.querySelectorAll("td[data-date]").forEach(el=>{
+    el.onclick=()=>onCalDayClick(el.dataset.date);
+  });
+}
+function onCalDayClick(date){
+  if(readOnly) return;
+  if(calSel.ids.length===0){
+    calCancelDay=date; renderCalendar();
+    toast("已选中 "+date+"：点左侧列表空白处或「清空该日」按钮可取消该日全部任务；若想改期请先点左侧任务");
+    return;
+  }
+  pushHistory();
+  if(calSel.ids.length===1){ const it=findItemGlobal(calSel.ids[0]); if(it) it.day=date; toast("已安排到 "+date); }
+  else {
+    const a=parseInt(prompt("一天放几个任务？", "1")); if(isNaN(a)||a<1){ history.pop(); future=[]; updateUndoButtons(); return; }
+    distribute(calSel.ids, date, a);
+    toast(`已顺延分配 ${calSel.ids.length} 项（每天 ${a} 个）`);
+  }
+  calSel={ids:[],mode:"item"};
+  save(); renderViews();
+}
+function cancelDay(date){
+  if(!calCancelDay) return;
+  pushHistory();
+  let n=0; const d=calCancelDay;
+  state.projects.forEach(p=>p.items.forEach(it=>{ if(it.day===d){ it.day=""; n++; } }));
+  calCancelDay=null;
+  save(); renderViews();
+  toast("已取消 "+d+" 的 "+n+" 项任务");
+}
+function distribute(ids, startDate, perDay){
+  let d=new Date(startDate);
+  for(let i=0;i<ids.length;i++){
+    const it=findItemGlobal(ids[i]); if(it) it.day=d.toISOString().slice(0,10);
+    if((i+1)%perDay===0 && i+1<ids.length) d.setDate(d.getDate()+1);
+  }
+}
+function showModal(id){ document.getElementById(id).classList.add("show"); }
+
+/* ---------- login ---------- */
+function openLogin(){
+  document.getElementById("login_name").value=account||"";
+  document.getElementById("loginNote").textContent = siteConfig.syncEndpoint ? "已配置云端同步端点" : "未配置云端端点：将仅本地保存（部署后端后可跨设备同步）";
+  document.getElementById("loginMask").classList.add("show");
+}
+async function doLogin(){
+  const name=document.getElementById("login_name").value.trim();
+  if(!name){ toast("请输入凭据号"); return; }
+  account=name; localStorage.setItem(ACC_KEY, account);
+  history=[]; future=[];
+  const cloud=await cloudLoad();
+  if(cloud){ const sd=(cloud && cloud.data!==undefined)?cloud.data:cloud; state=sd; localStorage.setItem(dataKey(), JSON.stringify(state)); }
+  else { const local=load(); if(local){ state=local; } else { const def=makeDefaultProject(); state={ projects: def, currentId: def[0].id }; save(); } }
+  document.getElementById("loginMask").classList.remove("show");
+  renderAll(); updateLoginBtn(); updateUndoButtons();
+  toast("已登录："+account);
+}
+function doLogout(){
+  account=null; localStorage.removeItem(ACC_KEY);
+  const local=load(); const def=makeDefaultProject(); state=local || { projects: def, currentId: def[0].id };
+  history=[]; future=[];
+  renderAll(); updateLoginBtn(); updateUndoButtons();
+  toast("已退出登录（本地数据保留）");
+}
+function updateLoginBtn(){
+  const b=document.getElementById("loginBtn");
+  if(account){ b.textContent="👤 "+account; b.onclick=doLogout; b.title="点击退出登录"; }
+  else { b.textContent="登录"; b.onclick=openLogin; b.title="登录/注册"; }
+}
+
+/* ---------- share ---------- */
+function doShare(){
+  const payload={ v:1, name:curProj().name, projects:state.projects, exportedAt:new Date().toISOString().slice(0,10) };
+  const json=JSON.stringify(payload);
+  const b64=btoa(unescape(encodeURIComponent(json)));
+  const url=location.origin+location.pathname+"#share="+b64;
+  if(navigator.clipboard){ navigator.clipboard.writeText(url).then(()=>toast("只读分享链接已复制"),()=>toast("链接："+url.slice(0,60)+"…")); }
+  else toast("链接："+url.slice(0,60)+"…");
+  prompt("复制此只读分享链接发给家人：", url);
+}
+function parseShareHash(){
+  const h=location.hash;
+  if(h.indexOf("#share=")===0){
+    try{
+      const b64=h.slice(7);
+      const json=decodeURIComponent(escape(atob(b64)));
+      const data=JSON.parse(json);
+      sharedData=data; readOnly=true;
+      return true;
+    }catch(e){ toast("分享链接解析失败"); }
+  }
+  return false;
+}
+function showReadOnlyBanner(){
+  document.body.classList.add("readonly");
+  const b=document.getElementById("roBanner");
+  b.innerHTML='🔗 只读分享模式 · 你正在查看他人进度（无法修改） · <a id="roExit">退出查看</a>';
+  document.getElementById("roExit").onclick=()=>{ location.hash=""; location.reload(); };
+}
+
+/* ---------- admin ---------- */
+/* 纯JS SHA-256（不依赖 crypto.subtle，file:// 直接打开也能用） */
+function sha256(str){
+  function rrot(x,n){ return (x>>>n)|(x<<(32-n)); }
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  let m=utf8Bytes(str);
+  const l=m.length;
+  const bitLen=l*8;
+  m=m.concat([0x80]);
+  while(m.length%64!==56) m.push(0);
+  for(let i=7;i>=0;i--) m.push((bitLen>>> (i*8))&0xff);
+  let h0=0x6a09e667,h1=0xbb67ae85,h2=0x3c6ef372,h3=0xa54ff53a,h4=0x510e527f,h5=0x9b05688c,h6=0x1f83d9ab,h7=0x5be0cd19;
+  const w=new Array(64);
+  for(let i=0;i<m.length;i+=64){
+    for(let t=0;t<16;t++){ w[t]=(m[i+4*t]<<24)|(m[i+4*t+1]<<16)|(m[i+4*t+2]<<8)|m[i+4*t+3]; }
+    for(let t=16;t<64;t++){ const s0=rrot(w[t-15],7)^rrot(w[t-15],18)^(w[t-15]>>>3); const s1=rrot(w[t-2],17)^rrot(w[t-2],19)^(w[t-2]>>>10); w[t]=(w[t-16]+s0+w[t-7]+s1)|0; }
+    let a=h0,b=h1,c=h2,d=h3,e=h4,f=h5,g=h6,h=h7;
+    for(let t=0;t<64;t++){
+      const S1=rrot(e,6)^rrot(e,11)^rrot(e,25); const ch=(e&f)^((~e)&g); const t1=(h+S1+ch+K[t]+w[t])|0;
+      const S0=rrot(a,2)^rrot(a,13)^rrot(a,22); const maj=(a&b)^(a&c)^(b&c); const t2=(S0+maj)|0;
+      h=g;g=f;f=e;e=(d+t1)|0;d=c;c=b;b=a;a=(t1+t2)|0;
+    }
+    h0=(h0+a)|0;h1=(h1+b)|0;h2=(h2+c)|0;h3=(h3+d)|0;h4=(h4+e)|0;h5=(h5+f)|0;h6=(h6+g)|0;h7=(h7+h)|0;
+  }
+  return [h0,h1,h2,h3,h4,h5,h6,h7].map(x=>(x>>>0).toString(16).padStart(8,'0')).join('');
+}
+function utf8Bytes(s){ const out=[]; for(let i=0;i<s.length;i++){ let c=s.charCodeAt(i); if(c<0x80) out.push(c); else if(c<0x800){ out.push(0xc0|(c>>6),0x80|(c&0x3f)); } else if(c>=0xd800&&c<0xdc00){ const c2=s.charCodeAt(++i); const cp=0x10000+((c&0x3ff)<<10)+(c2&0x3ff); out.push(0xf0|(cp>>18),0x80|((cp>>12)&0x3f),0x80|((cp>>6)&0x3f),0x80|(cp&0x3f)); } else { out.push(0xe0|(c>>12),0x80|((c>>6)&0x3f),0x80|(c&0x3f)); } } return out; }
+function openAdmin(){
+  const pw=prompt("请输入后台密码：","");
+  if(pw===null) return;
+  const h=sha256(pw);
+  if(h!==siteConfig.adminPassword){ toast("密码错误"); return; }
+  document.getElementById("ad_announcement").value=siteConfig.announcement||"";
+  document.getElementById("ad_intro").value=siteConfig.intro||"";
+  document.getElementById("ad_about").value=siteConfig.about||"";
+  document.getElementById("ad_changelog").value=siteConfig.changelog||"";
+  document.getElementById("ad_calendarHelp").value=siteConfig.calendarHelp||"";
+  document.getElementById("ad_defaultData").value=JSON.stringify(siteConfig.defaultData||DEFAULT_ITEMS, null, 2);
+  refreshAdminPreview();
+  document.getElementById("adminMask").classList.add("show");
+}
+function refreshAdminPreview(){
+  document.getElementById("pv_ann").innerHTML=md2html(document.getElementById("ad_announcement").value);
+  document.getElementById("pv_intro").innerHTML=md2html(document.getElementById("ad_intro").value);
+  document.getElementById("pv_about").innerHTML=md2html(document.getElementById("ad_about").value);
+  document.getElementById("pv_log").innerHTML=md2html(document.getElementById("ad_changelog").value);
+  document.getElementById("pv_cal").innerHTML=md2html(document.getElementById("ad_calendarHelp").value);
+}
+function saveAdmin(){
+  siteConfig.announcement=document.getElementById("ad_announcement").value;
+  siteConfig.intro=document.getElementById("ad_intro").value;
+  siteConfig.about=document.getElementById("ad_about").value;
+  siteConfig.changelog=document.getElementById("ad_changelog").value;
+  siteConfig.calendarHelp=document.getElementById("ad_calendarHelp").value;
+  const dv=document.getElementById("ad_defaultData").value.trim();
+  try{ siteConfig.defaultData=JSON.parse(dv); document.getElementById("dataErr").textContent=""; }
+  catch(e){ document.getElementById("dataErr").textContent="默认数据 JSON 解析失败，未保存该项"; }
+  saveSiteConfig();
+  document.getElementById("adminMask").classList.remove("show");
+  toast("后台内容已保存（本地）");
+  applySiteContent();
+}
+function exportSiteConfig(){
+  const blob=new Blob([JSON.stringify(siteConfig,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="site-config.json"; a.click();
+  toast("已导出 site-config.json，放到仓库根目录即发布");
+}
+function applySiteContent(){
+  document.getElementById("introBody").innerHTML=md2html(siteConfig.intro);
+  document.getElementById("logBody").innerHTML=md2html(siteConfig.changelog);
+  document.getElementById("aboutBody").innerHTML=md2html(siteConfig.about);
+}
+
+/* ---------- boot ---------- */
+async function boot(){
+  await loadSiteConfig();
+  applySiteContent();
+  if(parseShareHash()){
+    state = sharedData;
+    showReadOnlyBanner();
+    renderAll();
+    return;
+  }
+  account=localStorage.getItem(ACC_KEY)||null;
+  const local=load();
+  if(local) state=local;
+  else { const def=makeDefaultProject(); state={ projects: def, currentId: def[0].id }; }
+  if(siteConfig.announcement){
+    const off=localStorage.getItem("hw_anno_off");
+    const today=new Date().toISOString().slice(0,10);
+    if(off!==today){
+      document.getElementById("annBody").innerHTML=md2html(siteConfig.announcement);
+      document.getElementById("annMask").classList.add("show");
+    }
+  }
+  updateLoginBtn();
+  initTheme();
+  renderAll();
+  updateUndoButtons();
+}
+
+/* ---------- events ---------- */
+document.getElementById("addBtn").onclick=addItems;
+document.getElementById("newProj").onclick=()=>{
+  const name=prompt("新项目名称：","我的项目"); if(!name) return;
+  pushHistory();
+  const p={ id:"p_"+uid(), name:name.trim(), items:[] };
+  state.projects.push(p); state.currentId=p.id; save(); renderAll();
+  toast("已新建项目："+p.name);
+};
+document.getElementById("exportBtn").onclick=()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="作业清单配置_"+new Date().toISOString().slice(0,10)+".json"; a.click();
+  toast("配置已导出");
+};
+document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
+document.getElementById("importFile").onchange=e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{ const data=JSON.parse(rd.result);
+    if(data && Array.isArray(data.projects)){ if(!readOnly) pushHistory(); state=data; save(); renderAll(); toast("配置已导入"); }
+    else toast("文件格式不正确"); }catch(err){ toast("解析失败"); } };
+  rd.readAsText(file); e.target.value="";
+};
+document.querySelectorAll(".sec-tabs button").forEach(b=>{
+  b.onclick=()=>{ curSec=b.dataset.sec; document.querySelectorAll(".sec-tabs button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); renderViews(); };
+});
+document.getElementById("batchToggle").onclick=toggleBatch;
+document.getElementById("batchAll").onclick=()=>{
+  const p=curProj();
+  const ids = curSec==="done" ? p.items.filter(x=>x.done).map(x=>x.id) : curSec==="day" ? p.items.filter(x=>x.day).map(x=>x.id) : p.items.filter(x=>!x.done).map(x=>x.id);
+  ids.forEach(id=>selectedIds.add(id)); renderViews(); toast("已全选当前视图");
+};
+document.getElementById("batchNone").onclick=()=>{ selectedIds.clear(); renderViews(); };
+document.getElementById("batchDeadline").onclick=()=>{ if(selectedIds.size===0){toast("请先勾选任务");return;} openBatch("截止日期","batchDeadlineField","batchDayField","batchComplexField"); };
+document.getElementById("batchDay").onclick=()=>{ if(selectedIds.size===0){toast("请先勾选任务");return;} openBatch("调配到日期","batchDayField","batchDeadlineField","batchComplexField"); };
+document.getElementById("batchComplex").onclick=()=>{ if(selectedIds.size===0){toast("请先勾选任务");return;} openBatch("复杂度","batchComplexField","batchDeadlineField","batchDayField"); };
+function openBatch(title, showId, hideId1, hideId2){
+  document.getElementById("batchTitle").textContent="批量修改"+title;
+  document.getElementById(showId).style.display="block";
+  document.getElementById(hideId1).style.display="none";
+  document.getElementById(hideId2).style.display="none";
+  document.getElementById("batchModalMask").classList.add("show");
+}
+document.getElementById("batchSave").onclick=()=>{
+  const title=document.getElementById("batchTitle").textContent;
+  if(title.includes("截止")) batchSet("deadline", document.getElementById("batch_deadline").value);
+  else if(title.includes("调配")) batchSet("day", document.getElementById("batch_day").value);
+  else if(title.includes("复杂度")) batchSet("complex", document.getElementById("batch_complex").value);
+  document.getElementById("batchModalMask").classList.remove("show");
+};
+document.getElementById("batchCancel").onclick=()=>document.getElementById("batchModalMask").classList.remove("show");
+document.getElementById("batchDone").onclick=()=>{ if(selectedIds.size===0){toast("请先勾选任务");return;} pushHistory(); getSelectedItems().forEach(it=>it.done=true); save(); renderViews(); toast("已标记完成"); };
+document.getElementById("batchUndo").onclick=()=>{ if(selectedIds.size===0){toast("请先勾选任务");return;} pushHistory(); getSelectedItems().forEach(it=>it.done=false); save(); renderViews(); toast("已标记未完成"); };
+document.getElementById("batchDel").onclick=batchDelete;
+document.getElementById("sortDeadline").onclick=()=>{ sortByDeadline=!sortByDeadline; document.getElementById("sortDeadline").classList.toggle("active", sortByDeadline); renderViews(); };
+document.getElementById("autoAssignBtn").onclick=openAutoAssign;
+document.getElementById("autoRun").onclick=runAutoAssign;
+document.getElementById("autoCancel").onclick=()=>document.getElementById("autoModalMask").classList.remove("show");
+document.getElementById("eCancel").onclick=closeEdit;
+document.getElementById("eSave").onclick=saveEdit;
+document.getElementById("ctxRename").onclick=()=>{ if(ctxTargetId){ renameProj(ctxTargetId); hideCtx(); } };
+document.getElementById("ctxCopy").onclick=()=>{ if(ctxTargetId){ copyProj(ctxTargetId); hideCtx(); } };
+document.getElementById("ctxDelete").onclick=()=>{ if(ctxTargetId){ delProj(ctxTargetId); hideCtx(); } };
+document.addEventListener("click",e=>{ if(!e.target.closest("#ctxMenu")) hideCtx(); });
+document.querySelectorAll(".modal-mask").forEach(mask=>{ mask.onclick=e=>{ if(e.target===mask) mask.classList.remove("show"); }; });
+document.querySelectorAll(".close").forEach(btn=>{ btn.onclick=()=>document.getElementById(btn.dataset.close).classList.remove("show"); });
+document.getElementById("usageBtn").onclick=()=>document.getElementById("usageMask").classList.add("show");
+document.getElementById("changelogBtn").onclick=()=>document.getElementById("changelogMask").classList.add("show");
+document.getElementById("aboutBtn").onclick=()=>document.getElementById("aboutMask").classList.add("show");
+document.getElementById("introBtn").onclick=()=>document.getElementById("introMask").classList.add("show");
+document.getElementById("adminBtn").onclick=openAdmin;
+document.getElementById("adminSave").onclick=saveAdmin;
+document.getElementById("adminExport").onclick=exportSiteConfig;
+document.querySelectorAll(".admin-tabs button").forEach(b=>{
+  b.onclick=()=>{ document.querySelectorAll(".admin-tabs button").forEach(x=>x.classList.remove("on")); b.classList.add("on");
+    document.querySelectorAll(".admin-section").forEach(s=>s.classList.remove("on"));
+    document.getElementById("at_"+b.dataset.at).classList.add("on"); refreshAdminPreview(); };
+});
+["ad_announcement","ad_intro","ad_about","ad_changelog","ad_calendarHelp"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", refreshAdminPreview);
+});
+document.getElementById("loginGo").onclick=doLogin;
+document.getElementById("themeBtn").onclick=()=>{ const now=document.documentElement.getAttribute("data-theme"); setTheme(now==="dark"?"light":"dark"); };
+document.getElementById("shareBtn").onclick=doShare;
+document.getElementById("resetBtn").onclick=resetDefault;
+document.getElementById("calBtn").onclick=toggleCal;
+document.getElementById("calPrev").onclick=()=>{ calM--; if(calM<0){calM=11;calY--;} renderCalendar(); };
+document.getElementById("calNext").onclick=()=>{ calM++; if(calM>11){calM=0;calY++;} renderCalendar(); };
+document.getElementById("annClose").onclick=()=>{ if(document.getElementById("annNoShow").checked) localStorage.setItem("hw_anno_off", new Date().toISOString().slice(0,10)); document.getElementById("annMask").classList.remove("show"); };
+document.getElementById("f_count").oninput=()=>{ const c=parseInt(document.getElementById("f_count").value)||1; document.getElementById("countNote").textContent=c>1?`将生成 ${c} 条相同内容（自动编号 第1项…第${c}项）`:""; };
+
+boot();
+</script>
+</body>
+</html>
