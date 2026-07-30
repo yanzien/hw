@@ -44,6 +44,10 @@
   button.danger{background:var(--red-bg);color:var(--red)}
   button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
   .btns button:disabled{opacity:.4;cursor:not-allowed;filter:none}
+  .sync-status{font-size:12px;align-self:center;padding:2px 7px;border-radius:6px;white-space:nowrap}
+  .sync-status.ok{color:#1a7f37;background:rgba(26,127,55,.12)}
+  .sync-status.err{color:#cf222e;background:rgba(207,34,46,.12)}
+  .sync-status.pending{color:#9a6700;background:rgba(154,103,0,.12)}
   .wrap{max-width:1080px;margin:14px auto;padding:0 12px 60px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
   .card-h{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
@@ -217,6 +221,8 @@
     <button class="ghost" id="introBtn" title="介绍">📢</button>
     <button class="ghost" id="adminBtn" title="小后台">🔧</button>
     <button class="ghost" id="loginBtn">登录</button>
+    <button class="ghost" id="syncBtn" title="立即把当前进度同步到云端" style="display:none">🔄 同步</button>
+    <span id="syncStatus" class="sync-status" style="display:none"></span>
     <button class="ghost" id="batchToggle">批量</button>
     <button class="ghost" id="calBtn">📅 日历</button>
     <button class="ghost" id="newProj">＋项目</button>
@@ -621,7 +627,9 @@ function load(){
 function save(){
   if(readOnly) return;
   try{ localStorage.setItem(dataKey(), JSON.stringify(state)); }catch(e){}
-  cloudSave();
+  if(!readOnly && account && siteConfig.syncEndpoint){
+    cloudSave().then(res=>{ setSyncStatus(res.ok ? "已同步" : "失败", res.ok ? "ok" : "err"); });
+  }
 }
 function curProj(){ return state.projects.find(p=>p.id===state.currentId) || state.projects[0]; }
 function uid(){ return "i"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
@@ -638,22 +646,26 @@ function makeDefaultProject(){
 }
 
 /* ---------- cloud sync (pluggable) ---------- */
+// 返回 {ok:true} 或 {ok:false, status, reason}
 async function cloudSave(){
-  if(readOnly || !account || !siteConfig.syncEndpoint) return;
+  if(readOnly || !account || !siteConfig.syncEndpoint) return {ok:false, reason:'nologin'};
   try{
     const headers={'content-type':'application/json'};
     if(siteConfig.syncKey) headers['x-sync-key']=siteConfig.syncKey;
-    await fetch(siteConfig.syncEndpoint+'?account='+encodeURIComponent(account), {method:'PUT', headers,
+    const r=await fetch(siteConfig.syncEndpoint+'?account='+encodeURIComponent(account), {method:'PUT', headers,
       body:JSON.stringify({account, data:state})});
-  }catch(e){}
+    if(r.ok) return {ok:true};
+    return {ok:false, status:r.status};
+  }catch(e){ return {ok:false, reason:'net', err:e}; }
 }
+// 成功返回解析后的 JSON；失败返回 {__error:'net'|状态码}
 async function cloudLoad(){
-  if(!account || !siteConfig.syncEndpoint) return null;
+  if(!account || !siteConfig.syncEndpoint) return {__error:'nologin'};
   try{
     const r=await fetch(siteConfig.syncEndpoint+'?account='+encodeURIComponent(account));
     if(r.ok) return await r.json();
-  }catch(e){}
-  return null;
+    return {__error:r.status};
+  }catch(e){ return {__error:'net'}; }
 }
 
 function toast(msg){
@@ -1169,11 +1181,51 @@ async function doLogin(){
   account=name; localStorage.setItem(ACC_KEY, account);
   history=[]; future=[];
   const cloud=await cloudLoad();
-  if(cloud){ const sd=(cloud && cloud.data!==undefined)?cloud.data:cloud; state=sd; localStorage.setItem(dataKey(), JSON.stringify(state)); }
-  else { const local=load(); if(local){ state=local; } else { const def=makeDefaultProject(); state={ projects: def, currentId: def[0].id }; save(); } }
+  let loaded=false;
+  // 注意：云端无数据时会返回 {"data":null}，绝不能把 state 置为 null（旧逻辑会直接崩）
+  if(cloud && !cloud.__error && cloud.data && typeof cloud.data==='object'){
+    state=cloud.data; loaded=true;
+  }
+  if(!loaded){
+    const local=load();
+    if(local){ state=local; }
+    else { const def=makeDefaultProject(); state={ projects: def, currentId: def[0].id }; }
+  }
+  localStorage.setItem(dataKey(), JSON.stringify(state));
   document.getElementById("loginMask").classList.remove("show");
   renderAll(); updateLoginBtn(); updateUndoButtons();
-  toast("已登录："+account);
+  if(cloud && cloud.__error){
+    setSyncStatus("云端读取失败","err");
+    toast("已登录，但云端读取失败（先用本地数据，请检查后端）");
+  } else {
+    setSyncStatus("已同步","ok");
+    toast(loaded ? ("已登录并同步："+account) : ("已登录："+account));
+  }
+}
+async function manualSync(){
+  if(!account){ toast("请先登录云端账号"); return; }
+  if(!siteConfig.syncEndpoint){ toast("未配置云端端点，无法同步"); return; }
+  setSyncStatus("同步中…","pending");
+  const up=await cloudSave();
+  if(!up.ok){
+    setSyncStatus("失败","err");
+    toast(up.reason==='nologin' ? "请先登录云端账号" : ("同步失败："+(up.status||"网络错误")));
+    return;
+  }
+  const cloud=await cloudLoad();
+  if(cloud && !cloud.__error && cloud.data && typeof cloud.data==='object'){
+    state=cloud.data; localStorage.setItem(dataKey(), JSON.stringify(state)); renderAll();
+    setSyncStatus("已同步","ok"); toast("同步成功");
+  } else if(cloud && cloud.__error){
+    setSyncStatus("已上传","ok"); toast("已上传到云端（本次未拉取远端）");
+  } else {
+    setSyncStatus("已上传","ok"); toast("已同步到云端");
+  }
+}
+function setSyncStatus(text, kind){
+  const el=document.getElementById("syncStatus");
+  if(!el) return;
+  el.style.display=""; el.textContent=text; el.className="sync-status "+(kind||"");
 }
 function doLogout(){
   account=null; localStorage.removeItem(ACC_KEY);
@@ -1184,8 +1236,9 @@ function doLogout(){
 }
 function updateLoginBtn(){
   const b=document.getElementById("loginBtn");
-  if(account){ b.textContent="👤 "+account; b.onclick=doLogout; b.title="点击退出登录"; }
-  else { b.textContent="登录"; b.onclick=openLogin; b.title="登录/注册"; }
+  const s=document.getElementById("syncBtn");
+  if(account){ b.textContent="👤 "+account; b.onclick=doLogout; b.title="点击退出登录"; if(s) s.style.display=""; }
+  else { b.textContent="登录"; b.onclick=openLogin; b.title="登录/注册"; if(s) s.style.display="none"; const st=document.getElementById("syncStatus"); if(st) st.style.display="none"; }
 }
 
 /* ---------- share ---------- */
@@ -1510,6 +1563,7 @@ document.querySelectorAll(".admin-tabs button").forEach(b=>{
   document.getElementById(id).addEventListener("input", refreshAdminPreview);
 });
 document.getElementById("loginGo").onclick=doLogin;
+document.getElementById("syncBtn").onclick=manualSync;
 document.getElementById("themeBtn").onclick=()=>{ const now=document.documentElement.getAttribute("data-theme"); setTheme(now==="dark"?"light":"dark"); };
 document.getElementById("shareBtn").onclick=openShare;
 document.getElementById("shareReadBtn").onclick=()=>doShare('read');
